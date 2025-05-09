@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register - VMAS</title>    <link rel="stylesheet" href="register.css" />
+</head>
+<body>
+    <section id="login-page">
+        <header>
+            <img src="lspu_logo-removebg-preview.png" alt="VMAS Logo" class="logo" />
+            <h1>Create New Account - VMAS</h1>
+        </header>
+        <main>
+            <form class="login-form" id="registrationForm">
+                <a href="mainweb.html" class="back-link">← Back to Login</a>
+                
+                <div class="form-group">
+                    <label for="role">Register as:</label>
+                    <select id="role" name="role" required onchange="toggleFields()">
+                        <option value="">Select Role</option>
+                        <option value="visitor">Visitor</option>
+                        <option value="department">Department Staff</option>
+                        <option value="security">Security Guard</option>
+                    </select>
+                </div>
+
+                <!-- Common Fields -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <!-- Visitor-specific fields -->
+                <div id="visitorFields" class="hidden">
+                    <div class="form-group">
+                        <label for="purpose">Purpose of Visit</label>
+                        <select id="purpose" name="purpose" onchange="checkOtherPurpose()" required>
+                            <option value="">Select Purpose</option>
+                            <option value="meeting">Meeting</option>
+                            <option value="inquiry">Inquiry</option>
+                            <option value="delivery">Delivery</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="otherPurposeField" style="display: none;">
+                        <label for="otherPurpose">Please specify your purpose:</label>
+                        <input type="text" id="otherPurpose" name="otherPurpose" 
+                               placeholder="Enter your purpose here" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="organization">Organization/Company (Optional)</label>
+                        <input type="text" id="organization" name="organization">
+                    </div>
+                </div>
+
+                <!-- Department Staff-specific fields -->
+                <div id="departmentFields" class="hidden">
+                    <div class="form-group">
+                        <label for="departmentId">Department ID</label>
+                        <input type="text" id="departmentId" name="departmentId" placeholder="e.g., D123456" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="departmentEmail">Email</label>
+                        <input type="email" id="departmentEmail" name="departmentEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="departmentName">Department Name</label>
+                        <select id="departmentName" name="departmentName" required>
+                            <option value="">Select Department</option>
+                            <option value="it">Information Technology</option>
+                            <option value="engineering">Engineering</option>
+                            <option value="arts">Arts & Sciences</option>
+                            <option value="business">Business Administration</option>
+                            <option value="education">Education</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Security Guard-specific fields -->
+                <div id="securityFields" class="hidden">
+                    <div class="form-group">
+                        <label for="securityId">Security ID</label>
+                        <input type="text" id="securityId" name="securityId" placeholder="e.g., S123456" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="securityEmail">Email</label>
+                        <input type="email" id="securityEmail" name="securityEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="securityUsername">Username</label>
+                        <input type="text" id="securityUsername" name="securityUsername" required>
+                    </div>
+                </div>
+
+                <!-- Password fields -->
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+
+                <button type="submit">Create Account</button>
+                <p>Already have an account? <a href="mainweb.html">Sign In</a></p>
+            </form>
+        </main>
+    </section>
+
+    <script>
+        function toggleFields() {
+            const role = document.getElementById('role').value;
+            const visitorFields = document.getElementById('visitorFields');
+            const departmentFields = document.getElementById('departmentFields');
+            const securityFields = document.getElementById('securityFields');
+
+            // Hide all role-specific fields first
+            visitorFields.classList.add('hidden');
+            departmentFields.classList.add('hidden');
+            securityFields.classList.add('hidden');
+
+            // Show fields based on selected role
+            if (role === 'visitor') {
+                visitorFields.classList.remove('hidden');
+            } else if (role === 'department') {
+                departmentFields.classList.remove('hidden');
+            } else if (role === 'security') {
+                securityFields.classList.remove('hidden');
+            }
+        }
+
+        function checkOtherPurpose() {
+            const purposeSelect = document.getElementById('purpose');
+            const otherPurposeField = document.getElementById('otherPurposeField');
+            
+            if (purposeSelect.value === 'other') {
+                otherPurposeField.style.display = 'block';
+                document.getElementById('otherPurpose').required = true;
+            } else {
+                otherPurposeField.style.display = 'none';
+                document.getElementById('otherPurpose').required = false;
+            }
+        }
+
+        // Form submission handling
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const role = document.getElementById('role').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            // Password length validation
+            if (password.length < 8) {
+                alert('Password must be at least 8 characters long');
+                return;
+            }
+
+            // Role-specific validation
+            if (role === 'department') {
+                const deptId = document.getElementById('departmentId').value;
+                const deptIdPattern = /^D\d{6}$/;
+                
+                if (!deptIdPattern.test(deptId)) {
+                    alert('Department ID should be in format: D123456');
+                    return;
+                }
+            } else if (role === 'security') {
+                const securityId = document.getElementById('securityId').value;
+                const securityIdPattern = /^S\d{6}$/;
+                
+                if (!securityIdPattern.test(securityId)) {
+                    alert('Security ID should be in format: S123456');
+                    return;
+                }
+            }
+
+            // Here you would typically send the form data to a server
+            alert('Account created successfully!');
+            window.location.href = 'mainweb.html';
+        });
+    </script>
+</body>
+</html>
