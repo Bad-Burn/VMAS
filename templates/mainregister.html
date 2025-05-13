@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mainregister.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+    <script src="{{ url_for('static', filename='js/register.js') }}" defer></script>
+</head>
+<body>
+    <section id="login-page">
+        <header>
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo" class="logo" />
+            <h1>Create New Account - VMAS</h1>
+        </header>
+        <main>            <form class="login-form" id="registrationForm">
+                <a href="/" class="back-link">← Back to Login</a>
+                
+                <div class="form-group">
+                    <label for="role">Register as:</label>
+                    <select id="role" name="role" required>
+                        <option value="">Select Role</option>
+                        <option value="visitor">Visitor</option>
+                        <option value="department">Department Staff</option>
+                        <option value="security">Security Guard</option>
+                    </select>
+                </div>                
+                <div class="form-group">
+                    <label for="userId">User ID:</label>
+                    <input type="text" id="userId" name="userId" required placeholder="ID will be in format: V123456/D123456/S123456">
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Full Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required minlength="8">
+                </div>                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password:</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8">
+                </div>                <button type="submit">Register</button>
+                <p>Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
+            </form>
+        </main>
+    </section>
+
+    <script>
+        function toggleFields() {
+            const role = document.getElementById('role').value;
+            const visitorFields = document.getElementById('visitorFields');
+            const departmentFields = document.getElementById('departmentFields');
+            const securityFields = document.getElementById('securityFields');
+
+            // Hide all role-specific fields first
+            visitorFields.classList.add('hidden');
+            departmentFields.classList.add('hidden');
+            securityFields.classList.add('hidden');
+
+            // Show fields based on selected role
+            if (role === 'visitor') {
+                visitorFields.classList.remove('hidden');
+            } else if (role === 'department') {
+                departmentFields.classList.remove('hidden');
+            } else if (role === 'security') {
+                securityFields.classList.remove('hidden');
+            }
+        }
+
+        function checkOtherPurpose() {
+            const purposeSelect = document.getElementById('purpose');
+            const otherPurposeField = document.getElementById('otherPurposeField');
+            
+            if (purposeSelect.value === 'other') {
+                otherPurposeField.style.display = 'block';
+                document.getElementById('otherPurpose').required = true;
+            } else {
+                otherPurposeField.style.display = 'none';
+                document.getElementById('otherPurpose').required = false;
+            }
+        }        // Form submission handling
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const role = document.getElementById('role').value;
+            const userId = document.getElementById('userId').value;
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            // Password length validation
+            if (password.length < 8) {
+                alert('Password must be at least 8 characters long');
+                return;
+            }
+
+            // ID format validation
+            let idPattern;
+            switch (role) {
+                case 'visitor':
+                    idPattern = /^V\d{6}$/;
+                    break;
+                case 'department':
+                    idPattern = /^D\d{6}$/;
+                    break;
+                case 'security':
+                    idPattern = /^S\d{6}$/;
+                    break;
+                default:
+                    alert('Please select a role');
+                    return;
+            }
+
+            if (!idPattern.test(userId)) {
+                alert(`${role.charAt(0).toUpperCase() + role.slice(1)} ID must be in format: ${role[0].toUpperCase()}123456`);
+                return;
+            }
+
+            // Send registration request
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    userId: userId,
+                    password: password,
+                    role: role,
+                    name: name,
+                    email: email
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    const savedMessage = `Account created successfully!\n\nYour details:\nID: ${userId}\nRole: ${role}\nName: ${name}\nEmail: ${email}\n\nPlease remember your ID and password for login.`;
+                    alert(savedMessage);
+                    
+                    // Redirect to login page
+                    window.location.href = '/';
+                } else {
+                    alert(data.message || 'Registration failed. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during registration. Please try again.');
+        });
+    </script>
+</body>
+</html>

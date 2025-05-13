@@ -1,0 +1,172 @@
+/* Import common styles */
+@import url('security.css');
+
+/* QR Management specific styles */
+.qr-container {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.qr-form {
+    flex: 1;
+    background: var(--primary-color);
+    padding: 2rem;
+    border-radius: 10px;
+    color: white;
+}
+
+.qr-preview {
+    flex: 1;
+    background: var(--primary-color);
+    padding: 2rem;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1rem;
+}
+
+.form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.required {
+    color: #ff4444;
+    margin-left: 4px;
+}
+
+.btn-create,
+.btn-save {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-create {
+    background: #4CAF50;
+    color: white;
+    margin-top: 1rem;
+}
+
+.btn-save {
+    background: #2196F3;
+    color: white;
+}
+
+.btn-create:hover {
+    background: #43A047;
+}
+
+.btn-save:hover {
+    background: #1E88E5;
+}
+
+#qrCode {
+    background: white;
+    padding: 1rem;
+    border-radius: 5px;
+    min-height: 256px;
+    min-width: 256px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* QR Gallery styles */
+.qr-gallery {
+    background: var(--primary-color);
+    padding: 2rem;
+    border-radius: 10px;
+    color: white;
+}
+
+.gallery-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.qr-item {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.qr-item img {
+    max-width: 200px;
+    height: auto;
+    margin-bottom: 1rem;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 5px;
+}
+
+.qr-info {
+    text-align: left;
+}
+
+.qr-info p {
+    margin: 0.5rem 0;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.btn-download {
+    background: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    margin-top: 1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+    width: 100%;
+}
+
+.btn-download:hover {
+    background: #1E88E5;
+}
+
+.btn-download i {
+    margin-right: 0.5rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .qr-container {
+        flex-direction: column;
+    }
+
+    .qr-preview {
+        margin-top: 1rem;
+    }
+}

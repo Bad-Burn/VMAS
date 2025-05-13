@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - VMAS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+</head>
+<body>
+  <section id="login-page">
+    <header>
+      <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo" class="logo" />
+      <h1>Visitor Management and Analysis System (VMAS)</h1>
+    </header>    <main>      <form class="login-form" id="loginForm" method="POST">
+        <label for="role">Log in as:</label>
+        <select id="role" name="role" required>
+          <option value="">Select Role</option>
+          <option value="visitor">Visitor</option>
+          <option value="department">Department Staff</option>
+          <option value="security">Security Guard</option>
+        </select>
+        <input type="text" id="userId" name="userId" placeholder="User ID / Department ID / Security ID" required />        <input type="password" id="password" name="password" placeholder="Password" required />        <a href="#">Forgot password?</a>        <button type="submit">Sign In</button>
+        <p>New user? <a href="{{ url_for('register') }}">Register here</a></p>
+      </form>
+    </main>
+  </section>
+
+  <script>    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const role = document.getElementById('role').value;
+      const userId = document.getElementById('userId').value;
+      const password = document.getElementById('password').value;
+
+      
+      if (!role) {
+        alert('Please select a role');
+        return;
+      }
+
+     
+      let idPattern;
+      switch (role) {
+        case 'visitor':
+          idPattern = /^V\d{6}$/; // Visitor IDs start with V followed by 6 digits
+          if (!idPattern.test(userId)) {
+            alert('Visitor ID should be in format: V123456');
+            return;
+          }
+          break;
+        case 'department':
+          idPattern = /^D\d{6}$/; // Department IDs start with D followed by 6 digits
+          if (!idPattern.test(userId)) {
+            alert('Department ID should be in format: D123456');
+            return;
+          }
+          break;
+        case 'security':
+          idPattern = /^S\d{6}$/; // Security IDs start with S followed by 6 digits
+          if (!idPattern.test(userId)) {
+            alert('Security ID should be in format: S123456');
+            return;
+          }
+          break;
+      }
+
+      // Password validation (minimum 8 characters)
+      if (password.length < 8) {
+        alert('Password must be at least 8 characters long');
+        return;
+      }
+
+      // Send login request to backend
+      fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          userId: userId,
+          password: password,
+          role: role
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = data.redirect;
+        } else {
+          alert(data.message || 'Invalid ID or password');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred during login');
+      });
+    });
+
+    // Update placeholder text based on selected role
+    document.getElementById('role').addEventListener('change', function() {
+      const userId = document.getElementById('userId');
+      switch (this.value) {
+        case 'visitor':
+          userId.placeholder = 'Visitor ID (e.g., V123456)';
+          break;
+        case 'department':
+          userId.placeholder = 'Department ID (e.g., D123456)';
+          break;
+        case 'security':
+          userId.placeholder = 'Security ID (e.g., S123456)';
+          break;
+        default:
+          userId.placeholder = 'User ID / Department ID / Security ID';
+      }
+    });
+  </script>
+</body>
+</html>

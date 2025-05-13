@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Profile - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->    <nav class="sidebar">
+        {% if session.role == 'security' %}
+        <a href="{{ url_for('security') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('security', view='pending') }}" class="menu-item">
+            <i class="fas fa-clipboard-list"></i>
+            Pending Requests
+        </a>
+        <a href="{{ url_for('security', view='qr') }}" class="menu-item">
+            <i class="fas fa-qrcode"></i>
+            QR Management
+        </a>
+        {% endif %}
+        <a href="{{ url_for(session.role, view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            History
+        </a>
+        <a href="{{ url_for(session.role, view='profile') }}" class="menu-item active">
+            <i class="fas fa-user"></i>
+            Profile
+        </a>
+        <a href="{{ url_for(session.role, view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+        {% if session.role == 'security' %}
+        <a href="{{ url_for('security', view='department') }}" class="menu-item">
+            <i class="fas fa-building"></i>
+            Department
+        </a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <img src="lspu_logo-removebg-preview.png" alt="VMAS Logo">
+            <h1>My Profile</h1>
+        </header>        <!-- Profile Section -->
+        <section class="profile-section">
+            <div class="profile-container">
+                <div class="profile-header">
+                    <h2>My Profile</h2>
+                </div>
+                
+                <div class="profile-info">
+                    <div class="info-group">
+                        <label>Email*</label>
+                        <p id="emailDisplay"></p>
+                    </div>
+
+                    <div class="info-group">
+                        <label>Name*</label>
+                        <p id="nameDisplay"></p>
+                    </div>
+
+                    <div class="info-group">
+                        <label>Security ID*</label>
+                        <p id="securityIdDisplay"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="profile.js"></script>
+</body>
+</html>

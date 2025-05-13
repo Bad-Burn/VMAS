@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>QR Management - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/qr-management.css') }}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        {% if session.role == 'security' %}
+        <a href="{{ url_for('security') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('security', view='pending') }}" class="menu-item">
+            <i class="fas fa-clipboard-list"></i>
+            Pending Requests
+        </a>
+        <a href="{{ url_for('security', view='qr') }}" class="menu-item active">
+            <i class="fas fa-qrcode"></i>
+            QR Management
+        </a>
+        {% elif session.role == 'department' %}
+        <a href="{{ url_for('department') }}" class="menu-item">
+            <i class="fas fa-building"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('department', view='qr') }}" class="menu-item active">
+            <i class="fas fa-qrcode"></i>
+            QR Management
+        </a>
+        {% endif %}<a href="{{ url_for(session.role, view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            History
+        </a>
+        <a href="{{ url_for(session.role, view='profile') }}" class="menu-item">
+            <i class="fas fa-user"></i>
+            Profile
+        </a>
+        <a href="{{ url_for(session.role, view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+        {% if session.role == 'security' %}
+        <a href="{{ url_for('security', view='department') }}" class="menu-item">
+            <i class="fas fa-building"></i>
+            Department
+        </a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+            <h1>QR Code Management</h1>
+        </header>
+
+        <!-- QR Code Generation Section -->
+        <div class="qr-container">
+            <div class="qr-form">
+                <h2>Details<span class="required">*</span></h2>
+                <div class="form-group">
+                    <label for="userId">User ID<span class="required">*</span></label>
+                    <input type="text" id="userId" placeholder="Enter User ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="userName">Name<span class="required">*</span></label>
+                    <input type="text" id="userName" placeholder="Enter Name" required>
+                </div>
+                <button class="btn-create" onclick="generateQR()">Create QR</button>
+            </div>
+            
+            <div class="qr-preview">
+                <div id="qrCode">
+                    <!-- QR code will be generated here -->
+                </div>
+                <button class="btn-save" onclick="saveToGallery()">Save to Gallery</button>
+            </div>
+        </div>
+
+        <!-- QR Code Gallery Section -->
+        <div class="qr-gallery">
+            <h2>QR Code Gallery</h2>
+            <div class="gallery-container" id="qrGallery">
+                <!-- QR codes will be displayed here -->
+            </div>
+        </div>
+    </div>    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // Initialize QR options
+        const qrOptions = {
+            width: 256,
+            height: 256,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        };
+
+        function generateQR() {
+            const userId = document.getElementById('userId').value;
+            const userName = document.getElementById('userName').value;
+
+            if (!userId || !userName) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const qrContainer = document.getElementById('qrCode');
+            qrContainer.innerHTML = ''; // Clear previous QR code
+
+            const qrData = JSON.stringify({
+                userId: userId,
+                userName: userName,
+                timestamp: new Date().toISOString()
+            });
+
+            try {
+                const qr = new QRCode(qrContainer, {
+                    ...qrOptions,
+                    text: qrData
+                });
+                
+                // Show success message
+                alert('QR Code generated successfully!');
+            } catch (error) {
+                console.error('Error generating QR code:', error);
+                alert('Error generating QR code. Please try again.');
+            }
+        }        function saveToGallery() {
+            const qrCode = document.getElementById('qrCode').querySelector('img');
+            if (!qrCode) {
+                alert('Please generate a QR code first');
+                return;
+            }
+
+            const userId = document.getElementById('userId').value;
+            const userName = document.getElementById('userName').value;
+
+            // Save to gallery
+            try {
+                const gallery = document.getElementById('qrGallery');
+                const qrItem = document.createElement('div');
+                qrItem.className = 'qr-item';
+                qrItem.innerHTML = `
+                    <img src="${qrCode.src}" alt="QR Code">
+                    <div class="qr-info">
+                        <p>ID: ${userId}</p>
+                        <p>Name: ${userName}</p>
+                        <p>Date: ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    <button class="btn-download" onclick="downloadQR(this)" data-qr="${userId}">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                `;
+
+                gallery.insertBefore(qrItem, gallery.firstChild);
+                
+                // Save to localStorage
+                const savedQRs = JSON.parse(localStorage.getItem('qrCodes') || '[]');
+                savedQRs.unshift({
+                    userId,
+                    userName,
+                    date: new Date().toISOString(),
+                    qrImage: qrCode.src
+                });
+                localStorage.setItem('qrCodes', JSON.stringify(savedQRs));
+                
+                alert('QR Code saved to gallery!');
+            } catch (error) {
+                console.error('Error saving QR code:', error);
+                alert('Error saving QR code. Please try again.');
+            }
+        }
+
+        // Function to download QR code
+        function downloadQR(button) {
+            const qrImage = button.parentElement.querySelector('img');
+            const userId = button.getAttribute('data-qr');
+            
+            const link = document.createElement('a');
+            link.download = `QR_${userId}_${new Date().toISOString().slice(0,10)}.png`;
+            link.href = qrImage.src;
+            link.click();
+        }
+
+        // Load saved QR codes on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedQRs = JSON.parse(localStorage.getItem('qrCodes') || '[]');
+            const gallery = document.getElementById('qrGallery');
+            
+            savedQRs.forEach(qr => {
+                const qrItem = document.createElement('div');
+                qrItem.className = 'qr-item';
+                qrItem.innerHTML = `
+                    <img src="${qr.qrImage}" alt="QR Code">
+                    <div class="qr-info">
+                        <p>ID: ${qr.userId}</p>
+                        <p>Name: ${qr.userName}</p>
+                        <p>Date: ${new Date(qr.date).toLocaleDateString()}</p>
+                    </div>
+                    <button class="btn-download" onclick="downloadQR(this)" data-qr="${qr.userId}">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                `;
+                gallery.appendChild(qrItem);
+            });
+        });
+    </script>
+</body>
+</html>
