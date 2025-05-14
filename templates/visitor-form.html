@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Form - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/visitor-form.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="LSPU Logo">            <div class="brand-text">
+                <div>Visitor Management</div>
+                <div>and Analysis System</div>
+            </div>
+        </div>        <a href="{{ url_for('visitor') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('visitor', view='form') }}" class="menu-item active">
+            <i class="fas fa-clipboard-list"></i>
+            Request Form
+        </a>
+        <a href="{{ url_for('visitor', view='qr') }}" class="menu-item">
+            <i class="fas fa-qrcode"></i>
+            QR Code
+        </a>
+        <a href="{{ url_for('visitor', view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            Visit History
+        </a>
+        <a href="{{ url_for('visitor', view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+
+        <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>    <div class="main-content">
+        <div class="form-container">            <div class="form-header">
+                <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="LSPU Logo">
+                <h1>Visit Request Form</h1>
+            </div>
+            <form id="visitRequestForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id">ID<span class="required">*</span></label>
+                        <input type="text" id="id" name="id" value="{{ session.user_id }}" readonly required>
+                    </div>
+                    <div class="form-group">
+                        <label for="purpose">Purpose<span class="required">*</span></label>
+                        <input type="text" id="purpose" name="purpose" required placeholder="Enter your purpose of visit">
+                    </div>
+                </div>                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">Full Name<span class="required">*</span></label>
+                        <input type="text" id="name" name="name" value="{{ session.name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Department/Location<span class="required">*</span></label>
+                        <input type="text" id="location" name="location" required placeholder="e.g., IT Department, Admin Office">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="address">Complete Address<span class="required">*</span></label>
+                        <input type="text" id="address" name="address" required placeholder="Enter your complete address">
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Visit Date<span class="required">*</span></label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="contactNo">Contact Number<span class="required">*</span></label>
+                    <input type="tel" id="contactNo" name="contactNo" placeholder="+63 XXX XXX XXXX" required pattern="\+?([0-9]{2})?[-. ]?([0-9]{3})[-. ]?([0-9]{3})[-. ]?([0-9]{4})" title="Please enter a valid Philippines phone number (e.g., +63 912 345 6789)">
+                    <div class="validation-message" id="contactError">Please enter a valid phone number in the format: +63 XXX XXX XXXX</div>
+                </div>
+                <div class="success-message" id="successMessage">
+                    Visit request submitted successfully! Redirecting to history page...
+                </div>
+                <div class="submit-container">
+                    <button type="submit" class="btn-submit">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set min date to today
+            const dateInput = document.getElementById('date');
+            const today = new Date();
+            dateInput.min = today.toISOString().split('T')[0];
+            // Set max date to 30 days from today
+            const maxDate = new Date();
+            maxDate.setDate(today.getDate() + 30);
+            dateInput.max = maxDate.toISOString().split('T')[0];
+
+            // Real-time contact number validation
+            const contactInput = document.getElementById('contactNo');
+            const contactError = document.getElementById('contactError');
+            const phonePattern = /^\+?([0-9]{2})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
+
+            contactInput.addEventListener('input', function() {
+                if (this.value && !phonePattern.test(this.value)) {
+                    contactError.style.display = 'block';
+                    this.setCustomValidity('Invalid phone number format');
+                } else {
+                    contactError.style.display = 'none';
+                    this.setCustomValidity('');
+                }
+            });
+
+            // Form submission
+            document.getElementById('visitRequestForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Disable submit button to prevent double submission
+                const submitButton = document.querySelector('.btn-submit');
+                submitButton.disabled = true;
+                submitButton.textContent = 'Submitting...';
+
+                // Get form data
+                const formData = new FormData();
+                formData.append('id', document.getElementById('id').value);
+                formData.append('name', document.getElementById('name').value);
+                formData.append('address', document.getElementById('address').value);
+                formData.append('contactNo', document.getElementById('contactNo').value);
+                formData.append('purpose', document.getElementById('purpose').value);
+                formData.append('location', document.getElementById('location').value);
+                formData.append('date', document.getElementById('date').value);
+
+                // Submit form
+                fetch('/visitor/submit_request', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const successMessage = document.getElementById('successMessage');
+                        successMessage.style.display = 'block';
+                        successMessage.textContent = data.message;
+                        
+                        // Reset form
+                        document.getElementById('visitRequestForm').reset();
+                        
+                        // Redirect after showing success message
+                        setTimeout(() => {
+                            window.location.href = '/visitor/history';
+                        }, 2000);
+                    } else {
+                        alert(data.error || 'An error occurred. Please try again.');
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Submit Request';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Submit Request';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Dashboard - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/visitor.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-dark: #13334c;
+            --primary-light: rgba(255, 255, 255, 0.1);
+            --sidebar-width: 280px;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-dark);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+        }
+
+        .navbar-brand img {
+            height: 40px;
+            width: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .menu-item i {
+            width: 24px;
+            margin-right: 10px;
+        }
+
+        .menu-item:hover {
+            background-color: var(--primary-light);
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            margin: auto 20px 20px;
+            background: #dc3545;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: var(--primary-dark);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .header img {
+            height: 50px;
+            width: auto;
+        }
+
+        /* Dashboard Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            color: var(--primary-dark);
+        }
+
+        .card-header i {
+            font-size: 24px;
+            color: var(--primary-dark);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .action-button {
+            background-color: var(--primary-dark);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .action-button:hover {
+            background-color: #1a4566;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="LSPU Logo">
+            <div style="color: white; font-size: 16px;">
+                <div>Visitor Management</div>
+                <div>and Analysis System</div>
+            </div>
+        </div>
+
+        <a href="{{ url_for('visitor') }}" class="menu-item active">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('visitor', view='form') }}" class="menu-item">
+            <i class="fas fa-clipboard-list"></i>
+            Request Form
+        </a>
+        <a href="{{ url_for('visitor', view='qr') }}" class="menu-item">
+            <i class="fas fa-qrcode"></i>
+            QR Code
+        </a>
+        <a href="{{ url_for('visitor', view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            Visit History
+        </a>
+        <a href="{{ url_for('visitor', view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+
+        <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>
+
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="LSPU Logo">
+            <h1>Welcome, {{ session.name }}!</h1>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>Total Visits</h3>
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-value" id="totalVisits">0</div>
+                <div class="stat-label">Visits this month</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>Pending Requests</h3>
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-value" id="pendingRequests">0</div>
+                <div class="stat-label">Awaiting approval</div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>Last Visit</h3>
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-value" id="lastVisitDate">-</div>
+                <div class="stat-label">Most recent visit</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="{{ url_for('visitor', view='form') }}" class="action-button">
+                <i class="fas fa-plus"></i>
+                New Visit Request
+            </a>
+            <a href="{{ url_for('visitor', view='qr') }}" class="action-button">
+                <i class="fas fa-qrcode"></i>
+                View QR Code
+            </a>
+            <a href="{{ url_for('visitor', view='history') }}" class="action-button">
+                <i class="fas fa-history"></i>
+                Check Visit History
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Function to load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('/api/visitor/stats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('totalVisits').textContent = data.totalVisits;
+                    document.getElementById('pendingRequests').textContent = data.pendingRequests;
+                    document.getElementById('lastVisitDate').textContent = data.lastVisit || '-';
+                }
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+
+        // Load stats when page loads
+        document.addEventListener('DOMContentLoaded', loadDashboardStats);
+    </script>
+</body>
+</html>

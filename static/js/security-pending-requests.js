@@ -52,26 +52,55 @@ function createRequestRow(request) {
     return tr;
 }
 
-function updateStatus(requestId, isApproved) {
-    const requests = JSON.parse(localStorage.getItem('pendingRequests')) || [];
-    
-    if (confirm(confirmMessage)) {
-        const status = isApproved ? 'Approved' : 'Rejected';
-        row.cells[6].innerHTML = `<span class="status-${status.toLowerCase()}">${status}</span>`;
-        
-        // Update status in storage
-        const requestIndex = pendingRequests.findIndex(req => req.id === visitorId);
-        if (requestIndex !== -1) {
-            pendingRequests[requestIndex].status = status;
-            localStorage.setItem('pendingRequests', JSON.stringify(pendingRequests));
-        }
-        
-        // Remove approval buttons after decision
-        row.cells[7].innerHTML = '';
-        
-        // Show success message
-        alert(`Successfully ${action}d the request from ${visitorName}`);
+function updateStatus(id, isApproved) {
+    if (!isApproved) {
+        // Handle rejection separately
+        // TODO: Implement rejection logic
+        return;
     }
+
+    const formData = new FormData();
+    formData.append('visitId', id);
+    
+    // Show loading notification
+    showNotification('Processing request...', 'info');
+    
+    fetch('/security/approve_visit', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            // Reload the requests after a short delay
+            setTimeout(() => {
+                loadPendingRequests();
+            }, 1000);
+        } else {
+            showNotification(data.message || 'Failed to update request', 'error');
+            console.error('Error:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while processing the request', 'error');
+    });
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
 }
 
 // Add new pending request to the table

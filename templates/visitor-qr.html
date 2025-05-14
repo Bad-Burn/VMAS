@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/visitor.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .qr-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 20px auto;
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .qr-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .qr-header {
+            background-color: var(--primary-dark);
+            margin: -30px -30px 30px -30px;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .qr-header img {
+            height: 50px;
+            width: auto;
+        }
+
+        .qr-header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .qr-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .qr-code {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .qr-code img {
+            max-width: 250px;
+            height: auto;
+        }
+
+        .visitor-info {
+            text-align: left;
+            width: 100%;
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .info-item {
+            margin-bottom: 15px;
+        }
+
+        .info-item label {
+            display: block;
+            color: var(--primary-dark);
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .info-item span {
+            display: block;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .qr-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .status-active {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: #2e7d32;
+        }
+
+        .status-inactive {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: #d32f2f;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, var(--primary-dark), var(--secondary-dark));
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(19, 51, 76, 0.2);
+        }
+
+        .no-qr-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .request-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .request-btn:hover {
+            background: var(--hover-accent);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="LSPU Logo">
+            <div style="color: white; font-size: 16px;">
+                <div>Visitor Management</div>
+                <div>and Analysis System</div>
+            </div>
+        </div>
+
+        <a href="{{ url_for('visitor') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('visitor', view='form') }}" class="menu-item">
+            <i class="fas fa-clipboard-list"></i>
+            Request Form
+        </a>
+        <a href="{{ url_for('visitor', view='qr') }}" class="menu-item active">
+            <i class="fas fa-qrcode"></i>
+            QR Code
+        </a>
+        <a href="{{ url_for('visitor', view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            Visit History
+        </a>
+        <a href="{{ url_for('visitor', view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+
+        <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>
+
+    <div class="main-content">
+        <div class="qr-container">
+            <div class="qr-header">
+                <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="LSPU Logo">
+                <h1>Your QR Code</h1>
+            </div>
+            
+            <div class="qr-content">
+                {% if visitor_qr %}
+                    <div class="qr-code">
+                        <img src="data:image/png;base64,{{ visitor_qr.qr_code }}" alt="Visitor QR Code">
+                    </div>
+                    <div class="visitor-info">
+                        <div class="info-item">
+                            <label>Visitor ID</label>
+                            <span>{{ session.user_id }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Name</label>
+                            <span>{{ session.name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Status</label>
+                            <span class="qr-status {% if visitor_qr.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                {% if visitor_qr.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Valid Until</label>
+                            <span>{{ visitor_qr.valid_until.strftime('%B %d, %Y') if visitor_qr.valid_until else 'N/A' }}</span>
+                        </div>
+                    </div>
+                    <a href="#" class="download-btn" onclick="downloadQR()">
+                        <i class="fas fa-download"></i> Download QR Code
+                    </a>
+                {% else %}
+                    <div class="no-qr-message">
+                        <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #666; margin-bottom: 20px;"></i>
+                        <h2>No QR Code Available</h2>
+                        <p>You don't have an assigned QR code yet. Please submit a visit request first.</p>
+                        <a href="{{ url_for('visitor', view='form') }}" class="request-btn">
+                            <i class="fas fa-clipboard-list"></i> Submit Visit Request
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function downloadQR() {
+            const qrImage = document.querySelector('.qr-code img');
+            const link = document.createElement('a');
+            link.download = 'visitor-qr-code.png';
+            link.href = qrImage.src;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

@@ -5,7 +5,6 @@
     <title>Register - VMAS</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mainregister.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
-    <script src="{{ url_for('static', filename='js/register.js') }}" defer></script>
 </head>
 <body>
     <section id="login-page">
@@ -13,7 +12,7 @@
             <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo" class="logo" />
             <h1>Create New Account - VMAS</h1>
         </header>
-        <main>            <form class="login-form" id="registrationForm">
+        <main>            <form class="login-form" id="registrationForm" method="POST">
                 <a href="/" class="back-link">← Back to Login</a>
                 
                 <div class="form-group">
@@ -53,42 +52,27 @@
     </section>
 
     <script>
-        function toggleFields() {
-            const role = document.getElementById('role').value;
-            const visitorFields = document.getElementById('visitorFields');
-            const departmentFields = document.getElementById('departmentFields');
-            const securityFields = document.getElementById('securityFields');
-
-            // Hide all role-specific fields first
-            visitorFields.classList.add('hidden');
-            departmentFields.classList.add('hidden');
-            securityFields.classList.add('hidden');
-
-            // Show fields based on selected role
-            if (role === 'visitor') {
-                visitorFields.classList.remove('hidden');
-            } else if (role === 'department') {
-                departmentFields.classList.remove('hidden');
-            } else if (role === 'security') {
-                securityFields.classList.remove('hidden');
+        document.getElementById('role').addEventListener('change', function() {
+            const userId = document.getElementById('userId');
+            switch (this.value) {
+                case 'visitor':
+                    userId.placeholder = 'Visitor ID (e.g., V123456)';
+                    break;
+                case 'department':
+                    userId.placeholder = 'Department ID (e.g., D123456)';
+                    break;
+                case 'security':
+                    userId.placeholder = 'Security ID (e.g., S123456)';
+                    break;
+                default:
+                    userId.placeholder = 'ID will be in format: V123456/D123456/S123456';
             }
-        }
+        });
 
-        function checkOtherPurpose() {
-            const purposeSelect = document.getElementById('purpose');
-            const otherPurposeField = document.getElementById('otherPurposeField');
-            
-            if (purposeSelect.value === 'other') {
-                otherPurposeField.style.display = 'block';
-                document.getElementById('otherPurpose').required = true;
-            } else {
-                otherPurposeField.style.display = 'none';
-                document.getElementById('otherPurpose').required = false;
-            }
-        }        // Form submission handling
-        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            const form = this;
             const role = document.getElementById('role').value;
             const userId = document.getElementById('userId').value;
             const name = document.getElementById('name').value;
@@ -96,69 +80,77 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             
+            // Basic validation
+            if (!role || !userId || !name || !email || !password || !confirmPassword) {
+                alert('Please fill in all fields');
+                return;
+            }
+
             if (password !== confirmPassword) {
                 alert('Passwords do not match!');
                 return;
             }
 
-            // Password length validation
             if (password.length < 8) {
                 alert('Password must be at least 8 characters long');
                 return;
             }
 
             // ID format validation
-            let idPattern;
-            switch (role) {
-                case 'visitor':
-                    idPattern = /^V\d{6}$/;
-                    break;
-                case 'department':
-                    idPattern = /^D\d{6}$/;
-                    break;
-                case 'security':
-                    idPattern = /^S\d{6}$/;
-                    break;
-                default:
-                    alert('Please select a role');
-                    return;
-            }
+            const idPatterns = {
+                'visitor': /^V\d{6}$/,
+                'department': /^D\d{6}$/,
+                'security': /^S\d{6}$/
+            };
 
-            if (!idPattern.test(userId)) {
+            if (!idPatterns[role]?.test(userId)) {
                 alert(`${role.charAt(0).toUpperCase() + role.slice(1)} ID must be in format: ${role[0].toUpperCase()}123456`);
                 return;
             }
 
-            // Send registration request
-            fetch('/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    userId: userId,
-                    password: password,
-                    role: role,
-                    name: name,
-                    email: email
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
+            // Email validation
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+
+            try {
+                // Show loading state
+                const submitButton = form.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.textContent = 'Registering...';
+
+                // Create form data
+                const formData = new FormData();
+                formData.append('userId', userId);
+                formData.append('password', password);
+                formData.append('role', role);
+                formData.append('name', name);
+                formData.append('email', email);
+
+                // Send registration request
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
                 if (data.success) {
-                    // Show success message
-                    const savedMessage = `Account created successfully!\n\nYour details:\nID: ${userId}\nRole: ${role}\nName: ${name}\nEmail: ${email}\n\nPlease remember your ID and password for login.`;
-                    alert(savedMessage);
-                    
-                    // Redirect to login page
-                    window.location.href = '/';
+                    alert('Registration successful! Please log in.');
+                    window.location.href = '/';  // Redirect to login page
                 } else {
                     alert(data.message || 'Registration failed. Please try again.');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
+            } catch (error) {
+                console.error('Registration error:', error);
                 alert('An error occurred during registration. Please try again.');
+            } finally {
+                // Reset button state
+                const submitButton = form.querySelector('button[type="submit"]');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Register';
+            }
         });
     </script>
 </body>
