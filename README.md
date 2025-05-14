@@ -41,6 +41,74 @@ The application will create its database automatically on first run. No addition
 $env:SECRET_KEY = "your-secure-secret-key"
 ```
 
+### 5. Run the Application
+```powershell
+python app.py
+```
+
+The application will be available at `http://localhost:5000`
+
+## Project Structure
+```
+VMASS/
+├── app.py              # Main application file
+├── requirements.txt    # Python dependencies
+├── models/            # Database models
+│   ├── __init__.py
+│   ├── db.py         # Database configuration
+│   ├── user.py       # User model
+│   ├── visit.py      # Visit model
+│   ├── visitor.py    # Visitor model
+│   └── visitor_qr.py # QR code management
+├── static/           # Static assets
+│   ├── css/         # Stylesheets
+│   ├── images/      # Image assets
+│   └── js/          # JavaScript files
+└── templates/        # HTML templates
+    ├── VisitorDashboard.html
+    ├── visitor-form.html
+    ├── visitor-qr.html
+    └── other template files
+```
+
+## Troubleshooting Guide
+
+### Common Issues and Solutions
+
+1. **Import Errors**
+   - Make sure your virtual environment is activated
+   - Check that all dependencies are installed: `pip install -r requirements.txt`
+
+2. **Database Issues**
+   - If you see database errors, delete `vmas.db` and restart the application
+   - The database will be recreated automatically
+
+3. **Session Errors**
+   - Ensure the `flask_session` directory exists
+   - Clear old session files if you experience login issues
+
+4. **Missing Static Files**
+   - Verify that all files in the `static` directory were cloned correctly
+   - Check file permissions
+
+### Development Notes
+
+1. **Local Database**
+   - Each developer works with their own local `vmas.db`
+   - Do not commit the database file
+   - Database schema is created automatically on first run
+
+2. **Version Control**
+   - Always pull latest changes before starting work: `git pull`
+   - Create new branches for features: `git checkout -b feature-name`
+   - Don't commit `__pycache__`, `flask_session`, or `vmas.db`
+
+3. **Environment Setup**
+   - Always use virtual environment
+   - Keep `requirements.txt` updated if you add new packages
+
+For additional help or to report issues, please use the GitHub issues page.
+
 3. Create and activate virtual environment:
    ```powershell
    python -m venv venv
