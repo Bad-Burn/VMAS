@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Security Dashboard - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/security.css') }}" />
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->    <nav class="sidebar">
+        <a href="{{ url_for('security') }}" class="menu-item active">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('security', view='pending') }}" class="menu-item">
+            <i class="fas fa-clipboard-list"></i>
+            Pending Requests
+        </a>
+        <a href="{{ url_for('security', view='qr') }}" class="menu-item">
+            <i class="fas fa-qrcode"></i>
+            QR Management
+        </a>
+        <a href="{{ url_for('security', view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            History
+        </a>
+        <a href="{{ url_for('security', view='profile') }}" class="menu-item">
+            <i class="fas fa-user"></i>
+            Profile
+        </a>
+        <a href="{{ url_for('security', view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+        <a href="{{ url_for('security', view='department') }}" class="menu-item">
+            <i class="fas fa-building"></i>
+            Department
+        </a>
+        <a href="{{ url_for('logout') }}" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <img src="lspu_logo-removebg-preview.png" alt="VMAS Logo">
+            <h1>Visitor Management and Analysis System</h1>
+            <div class="search-bar">
+                <input type="text" placeholder="Search...">
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-edit">Edit</button>
+                <button class="btn btn-delete">Delete</button>
+            </div>
+        </header>
+
+        <!-- Visitor List Section -->
+        <section class="visitor-list">
+            <h2>Visitor List</h2>
+            <table class="visitor-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>Contact No</th>
+                        <th>Purpose</th>
+                        <th>Location</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Sample data rows -->
+                    <tr>
+                        <td>V100001</td>
+                        <td>John Doe</td>
+                        <td>123 Main St</td>
+                        <td>+63 912 345 6789</td>
+                        <td>Meeting</td>
+                        <td>IT Department</td>
+                        <td>2025-05-09</td>
+                        <td><span class="status status-active">Active</span></td>
+                    </tr>
+                    <!-- Add more rows as needed -->
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <script>
+        // Add event listeners for menu items
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // Remove active class from all items
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                // Add active class to clicked item
+                this.classList.add('active');
+            });
+        });
+
+        // Search functionality
+        document.querySelector('.search-bar input').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.visitor-table tbody tr');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // Edit and Delete button functionality
+        document.querySelector('.btn-edit').addEventListener('click', function() {
+            // Implement edit functionality
+            alert('Edit functionality to be implemented');
+        });
+
+        document.querySelector('.btn-delete').addEventListener('click', function() {
+            // Implement delete functionality
+            if(confirm('Are you sure you want to delete the selected items?')) {
+                alert('Delete functionality to be implemented');
+            }
+        });
+    </script>
+</body>
+</html>

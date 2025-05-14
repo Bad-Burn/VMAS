@@ -1,0 +1,82 @@
+/* Import common styles */
+@import url('security.css');
+
+/* Profile specific styles */
+.profile-section {
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 100px);
+}
+
+.profile-container {
+    background: var(--primary-color);
+    border-radius: 10px;
+    padding: 3rem;
+    color: white;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.profile-header {
+    margin-bottom: 2rem;
+    text-align: left;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 1rem;
+}
+
+.profile-header h2 {
+    font-size: 2rem;
+    margin: 0;
+    color: white;
+}
+
+.profile-info {
+    display: grid;
+    gap: 2rem;
+}
+
+.info-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-group label {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    position: relative;
+}
+
+.info-group label::after {
+    content: '*';
+    color: #ff4444;
+    margin-left: 4px;
+}
+
+.info-group p {
+    font-size: 1.2rem;
+    margin: 0;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* Responsive design adjustments */
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .profile-section {
+        padding: 1rem;
+    }
+
+    .profile-container {
+        padding: 1.5rem;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+}
