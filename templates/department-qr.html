@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Department QR Verification - VMAS</title>    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/department-qr.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <!-- Logo and System Name -->        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="LSPU Logo">
+            <div>
+                <div>Visitor Management</div>
+                <div>and Analysis System</div>
+            </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <a href="{{ url_for('department') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>        <a href="{{ url_for('department', view='verification') }}" class="menu-item">
+            <i class="fas fa-clipboard-list"></i>
+            Verification List
+        </a>
+        <a href="{{ url_for('department', view='qr') }}" class="menu-item active">
+            <i class="fas fa-qrcode"></i>
+            QR Verification
+        </a>
+        <a href="{{ url_for(session.role, view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            History
+        </a>
+        <a href="{{ url_for(session.role, view='profile') }}" class="menu-item">
+            <i class="fas fa-user"></i>
+            Profile
+        </a>
+        <a href="{{ url_for(session.role, view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+
+        <!-- Logout Button -->
+        <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+            <h1>QR Code Verification</h1>
+        </header>        <div class="qr-scanner-container">
+            <div class="section-header">
+                <h2>QR Code Scanner</h2>
+            </div>
+            <div class="scanner-wrapper">
+                <video id="preview"></video>
+            </div>
+            <div class="scan-result" id="scanResult" style="display: none;">
+                <h3>Visitor Information</h3>
+                <div class="result-content">
+                    <div id="visitorInfo">
+                        <p><strong>Visit ID:</strong> <span id="visitId"></span></p>
+                        <p><strong>Visitor ID:</strong> <span id="visitorId"></span></p>
+                        <p><strong>Name:</strong> <span id="visitorName"></span></p>
+                        <p><strong>Date:</strong> <span id="visitDate"></span></p>
+                        <p><strong>Status:</strong> <span id="visitStatus"></span></p>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-approve" onclick="handleVisit('approve')">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn-reject" onclick="handleVisit('reject')">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    </div>
+                </div>
+            </div>            <div class="upload-section">
+                <div class="section-header">
+                    <h2>Upload QR Code</h2>
+                </div>
+                <div class="upload-content">
+                    <input type="file" id="qrFileInput" accept="image/*" class="file-input">
+                    <button class="btn-upload" onclick="handleFileUpload()">
+                        <i class="fas fa-upload"></i> Upload QR Code
+                    </button>
+                </div>
+            </div>        </div>
+    </div>    
+    <script src="{{ url_for('static', filename='js/department-qr.js') }}"></script>
+    <script>
+        // Initialize QR scanner
+        let scanner = null;
+
+        async function initScanner() {
+            scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+            
+            scanner.addListener('scan', function (content) {
+                handleScanResult(content);
+            });
+
+            Instascan.Camera.getCameras().then(function (cameras) {
+                if (cameras.length > 0) {
+                    scanner.start(cameras[0]);
+                } else {
+                    console.error('No cameras found.');
+                    alert('No cameras found.');
+                }
+            }).catch(function (e) {
+                console.error(e);
+                alert('Error accessing camera: ' + e);
+            });
+        }
+
+        // Handle scan result
+        function handleScanResult(content) {
+            try {
+                const data = JSON.parse(content);
+                document.getElementById('visitorId').textContent = data.visitorId;
+                document.getElementById('visitorName').textContent = data.name;
+                document.getElementById('visitPurpose').textContent = data.purpose;
+                document.getElementById('visitStatus').textContent = 'Pending';
+                document.getElementById('scanResult').style.display = 'block';
+
+                // Send scan data to server
+                fetch('/api/verify-visit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    console.log('Success:', result);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error processing QR code');
+                });
+            } catch (e) {
+                console.error('Invalid QR code content:', e);
+                alert('Invalid QR code');
+            }
+        }
+
+        // Handle visit approval/rejection
+        function handleVisit(action) {
+            const visitorId = document.getElementById('visitorId').textContent;
+            
+            fetch('/api/update-visit-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    visitorId: visitorId,
+                    action: action
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(`Visit ${action}d successfully`);
+                document.getElementById('scanResult').style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(`Error ${action}ing visit`);            });
+        }
+
+        // Handle file upload
+        function handleFileUpload() {
+            const fileInput = document.getElementById('qrFileInput');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                // Here you would implement QR code reading from image
+                // This would require additional library support
+                alert('QR code image upload functionality coming soon');
+            } else {
+                alert('Please select a file first');
+            }
+        }
+
+        // Initialize scanner when page loads
+        window.addEventListener('load', initScanner);
+    </script>
+</body>
+</html>

@@ -96,3 +96,70 @@ a {
 a:hover {
     text-decoration: underline;
 }
+
+/* Sidebar styles */
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: #13334C;
+    position: fixed;
+    left: 0;
+    top: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+}
+
+.navbar-brand img {
+    width: 50px;
+    height: auto;
+}
+
+.navbar-brand div {
+    color: white;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    margin-bottom: 5px;
+    border-radius: 5px;
+}
+
+.menu-item i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+
+.menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+}
+
+.menu-item.active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.logout-btn {
+    margin-top: auto;
+    color: #ff4444;
+}
+
+.logout-btn:hover {
+    background-color: rgba(255, 68, 68, 0.1);
+}

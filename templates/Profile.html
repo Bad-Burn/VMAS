@@ -51,7 +51,7 @@
     <div class="main-content">
         <!-- Header -->
         <header class="header">
-            <img src="lspu_logo-removebg-preview.png" alt="VMAS Logo">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
             <h1>My Profile</h1>
         </header>        <!-- Profile Section -->
         <section class="profile-section">
@@ -79,6 +79,6 @@
             </div>
         </section>
     </div>
-    <script src="profile.js"></script>
+    <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
 </body>
 </html>

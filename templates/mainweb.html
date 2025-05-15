@@ -24,20 +24,20 @@
     </main>
   </section>
 
-  <script>    document.getElementById('loginForm').addEventListener('submit', function(e) {
+  <script>    document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
       const role = document.getElementById('role').value;
       const userId = document.getElementById('userId').value;
       const password = document.getElementById('password').value;
-
       
-      if (!role) {
-        alert('Please select a role');
+      console.log('Login attempt:', { role, userId }); // Debug log
+
+        if (!role || !userId || !password) {
+        alert('Please fill in all fields');
         return;
       }
 
-     
       let idPattern;
       switch (role) {
         case 'visitor':
@@ -67,32 +67,42 @@
       if (password.length < 8) {
         alert('Password must be at least 8 characters long');
         return;
-      }
+      }      try {
+        // Show loading state
+        const submitButton = document.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Signing in...';
 
-      // Send login request to backend
-      fetch('/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          userId: userId,
-          password: password,
-          role: role
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
+        const formData = new FormData();
+        formData.append('userId', userId);
+        formData.append('password', password);
+        formData.append('role', role);
+
+        const response = await fetch('/login', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+        console.log('Server response:', data); // Debug log
+
         if (data.success) {
           window.location.href = data.redirect;
         } else {
-          alert(data.message || 'Invalid ID or password');
+          alert(data.message || 'Invalid credentials');
+          // Reset button
+          submitButton.disabled = false;
+          submitButton.textContent = originalText;
         }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred during login');
-      });
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('An error occurred during login. Please try again.');
+        // Reset button
+        const submitButton = document.querySelector('button[type="submit"]');
+        submitButton.disabled = false;
+        submitButton.textContent = 'Sign In';
+      }
     });
 
     // Update placeholder text based on selected role

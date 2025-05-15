@@ -8,10 +8,64 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/department.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        .sidebar {
+            width: 240px;
+            --primary-dark: #13334c;
+            --primary-light: rgba(255, 255, 255, 0.1);
+        }
+        
         .main-content {
             margin-left: var(--sidebar-width);
             min-height: 100vh;
             background-color: #f5f7fa;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--primary-dark);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin: 2px 0;
+        }
+
+        .menu-item i {
+            width: 24px;
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .menu-item:hover {
+            background-color: var(--primary-light);
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            background-color: #dc3545;
+            margin: auto 20px 20px 20px;
+            border-radius: 5px;
+            text-align: center;
+            padding: 12px;
         }
         .navbar-brand {
             display: flex;
@@ -29,51 +83,152 @@
             margin: 0;
             font-size: 20px;
         }
+
+        /* Search Container */
+        .search-container {
+            background: #13334c;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .search-box {
             background: white;
             border-radius: 30px;
             padding: 8px 15px;
-            margin: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            width: 300px;
         }
-        .verification-list {
+
+        .search-box input {
+            border: none;
+            outline: none;
+            padding: 5px 10px;
+            width: 100%;
+            font-size: 15px;
+        }
+
+        .search-box i {
+            color: #666;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-edit, .btn-delete {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-edit {
+            background-color: #13334c;
+            color: white;
+            border: 1px solid white;
+        }
+
+        .btn-delete {
+            background-color: #ff4444;
+            color: white;
+        }
+
+        /* Department List */
+        .department-list {
             margin: 20px;
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             overflow: hidden;
         }
-        .verification-list table {
+
+        .department-list table {
             width: 100%;
             border-collapse: collapse;
         }
-        .verification-list th {
+
+        .department-list th {
             background: #13334c;
             color: white;
-            padding: 15px;
+            padding: 15px 20px;
             text-align: left;
+            font-weight: 500;
         }
-        .verification-list td {
-            padding: 12px 15px;
+
+        .department-list td {
+            padding: 15px 20px;
             border-bottom: 1px solid #eee;
         }
-        .verification-list tbody tr:hover {
+
+        .department-list tbody tr:hover {
             background: #f8f9fa;
+        }
+
+        /* Status Styles */
+        .status-active {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 13px;
+        }
+
+        /* Print Button */
+        .print-container {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-print {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
     </style>
 </head>
 <body>    <!-- Sidebar Navigation -->    <nav class="sidebar">
+        <!-- Logo and System Name -->
+        <div class="navbar-brand" style="margin-bottom: 30px;">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="LSPU Logo">
+            <div style="font-size: 16px;">
+                <div>Visitor Management</div>
+                <div>and Analysis System</div>
+            </div>
+        </div>
+
+        <!-- Navigation Links -->
         <a href="{{ url_for('department') }}" class="menu-item active">
             <i class="fas fa-home"></i>
             Dashboard
         </a>
-        <a href="{{ url_for(session.role, view='history') }}" class="menu-item">
-            <i class="fas fa-history"></i>
-            History
+        <a href="{{ url_for(session.role, view='pending') }}" class="menu-item">
+            <i class="fas fa-clipboard-list"></i>
+            Pending Requests
         </a>
         <a href="{{ url_for(session.role, view='qr') }}" class="menu-item">
             <i class="fas fa-qrcode"></i>
-            QR Scan
+            QR Management
+        </a>
+        <a href="{{ url_for(session.role, view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            History
         </a>
         <a href="{{ url_for(session.role, view='profile') }}" class="menu-item">
             <i class="fas fa-user"></i>
@@ -83,88 +238,72 @@
             <i class="fas fa-info-circle"></i>
             About
         </a>
+        <a href="{{ url_for(session.role) }}" class="menu-item">
+            <i class="fas fa-building"></i>
+            Department
+        </a>
+
+        <!-- Logout Button -->
         <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
             <i class="fas fa-sign-out-alt"></i>
             Logout
         </a>
-    </nav>    <div class="main-content">
+    </nav><div class="main-content">
         <!-- Navbar Brand -->
         <div class="navbar-brand">
             <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="LSPU Logo">
             <h2>Visitor Management and Analysis System</h2>
+        </div>        <!-- Search Box -->
+        <div class="search-container">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchDepartment" placeholder="Search">
+            </div>
+            <div class="action-buttons">
+                <button class="btn-edit"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn-delete"><i class="fas fa-trash"></i> Delete</button>
+            </div>
         </div>
 
-        <!-- Search Box -->
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchVerification" placeholder="Search...">
-        </div>
-
-        <!-- Verification List -->
-        <div class="verification-list">
-            <h3 class="section-title">Verification List</h3>
+        <!-- Department List -->
+        <div class="department-list">
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Purpose</th>
-                        <th>Date</th>
-                        <th>Location</th>
+                        <th>Department ID</th>
+                        <th>Department Name</th>
+                        <th>Email</th>
                         <th>Status</th>
+                        <th>Date</th>
                     </tr>
                 </thead>
-                <tbody id="verificationTable">
+                <tbody id="departmentTable">
                     <!-- Sample data will be replaced by dynamic data -->
                     <tr>
-                        <td>V123456</td>
-                        <td>John Doe</td>
-                        <td>Meeting</td>
-                        <td>2025-05-10</td>
-                        <td>Room 101</td>
-                        <td><span class="status-pending">Pending</span></td>
+                        <td>D123456</td>
+                        <td>Computer Studies</td>
+                        <td>cs@lspu.edu.ph</td>
+                        <td><span class="status-active">Active</span></td>
+                        <td>2025-05-13</td>
                     </tr>
                     <tr>
-                        <td>V123457</td>
-                        <td>Jane Smith</td>
-                        <td>Interview</td>
-                        <td>2025-05-10</td>
-                        <td>Room 203</td>
-                        <td><span class="status-approved">Approved</span></td>
+                        <td>D123457</td>
+                        <td>Engineering</td>
+                        <td>engineering@lspu.edu.ph</td>
+                        <td><span class="status-active">Active</span></td>
+                        <td>2025-05-13</td>
                     </tr>
                 </tbody>
             </table>
+            <div class="print-container">
+                <button class="btn-print"><i class="fas fa-print"></i> Print</button>
+            </div>
         </div>
-    </div>
-
-    <script>
-        // Sample data - replace with actual data from your backend
-        const verificationData = [
-            { id: 'V123456', name: 'John Doe', purpose: 'Meeting', date: '2025-05-10', location: 'Room 101', status: 'Pending' },
-            { id: 'V123457', name: 'Jane Smith', purpose: 'Interview', date: '2025-05-10', location: 'Room 203', status: 'Approved' }
-        ];
-
-        // Populate the verification list
-        function populateVerificationList() {
-            const tbody = document.getElementById('verificationList');
-            verificationData.forEach(visitor => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${visitor.id}</td>
-                    <td>${visitor.name}</td>
-                    <td>${visitor.purpose}</td>
-                    <td>${visitor.date}</td>
-                    <td>${visitor.location}</td>
-                    <td><span class="status-${visitor.status.toLowerCase()}">${visitor.status}</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
+    </div>    <script>
         // Search functionality
-        document.querySelector('.search-bar input').addEventListener('input', function(e) {
+        document.getElementById('searchDepartment').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#verificationList tr');
+            const rows = document.querySelectorAll('#departmentTable tr');
             
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
@@ -172,9 +311,38 @@
             });
         });
 
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function() {
-            populateVerificationList();
+        // Print functionality
+        document.querySelector('.btn-print').addEventListener('click', function() {
+            window.print();
+        });
+
+        // Edit functionality
+        document.querySelector('.btn-edit').addEventListener('click', function() {
+            const selectedRows = document.querySelectorAll('#departmentTable tr.selected');
+            if (selectedRows.length === 0) {
+                alert('Please select a department to edit');
+                return;
+            }
+            // Add your edit logic here
+        });
+
+        // Delete functionality
+        document.querySelector('.btn-delete').addEventListener('click', function() {
+            const selectedRows = document.querySelectorAll('#departmentTable tr.selected');
+            if (selectedRows.length === 0) {
+                alert('Please select a department to delete');
+                return;
+            }
+            if (confirm('Are you sure you want to delete the selected department(s)?')) {
+                // Add your delete logic here
+            }
+        });
+
+        // Row selection
+        document.querySelectorAll('#departmentTable tr').forEach(row => {
+            row.addEventListener('click', function() {
+                this.classList.toggle('selected');
+            });
         });
     </script>
 
