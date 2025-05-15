@@ -14,5 +14,3 @@ class Visit(db.Model):
     date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), default='pending')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    time_in = db.Column(db.DateTime, nullable=True)
-    time_out = db.Column(db.DateTime, nullable=True)

@@ -254,31 +254,12 @@ def register():
 @role_required(["security"])
 def security(view=None):
     if view:
-        if view == 'about':
-            # Get statistics for the security about page
-            total_visitors = Visit.query.distinct(Visit.visitor_id).count()
-            pending_requests = Visit.query.filter_by(status="Pending").count()
-            today = datetime.now().date()
-            approved_visits = Visit.query.filter(
-                Visit.status == "Approved",
-                Visit.date == today
-            ).count()
-            active_visits = Visit.query.filter(
-                Visit.time_in.isnot(None),
-                Visit.time_out.is_(None)
-            ).count()
-
-            return render_template("security-about.html",
-                             total_visitors=total_visitors,
-                             pending_requests=pending_requests,
-                             approved_visits=approved_visits,
-                             active_visits=active_visits)
-        
         templates = {
             "pending": "Pending-Request.html",
             "qr": "QR-Management.html",
-            "history": "security-history.html",
+            "history": "History.html",
             "profile": "Profile.html",
+            "about": "About.html",
             "department": "department.html"
         }
         return render_template(templates.get(view, "SecDashboard.html"))
@@ -290,35 +271,15 @@ def security(view=None):
 @role_required(["department"])
 def department(view=None):
     if view:
-        if view == 'verification':
-            visits = Visit.query.filter_by(status='pending').order_by(Visit.date.desc()).all()
-            return render_template("department-qr.html", visits=visits)
-        elif view == 'qr':
-            return render_template("department-qr.html")
-        elif view == 'history':
-            # Get visits related to the current department only
-            try:
-                department_visits = Visit.query.filter_by(location=session["name"]).order_by(Visit.date.desc()).all()
-                return render_template("department-history.html", visits=department_visits)
-            except Exception as e:
-                print(f"Error retrieving department visit history: {str(e)}")
-                return render_template("department-history.html", visits=None)
-        elif view == 'about':
-            return render_template("visitor-about.html")
-    
-    # Default to dashboard
-    visits = Visit.query.order_by(Visit.date.desc()).limit(5).all()
-    total_visits = Visit.query.count()
-    pending_visits = Visit.query.filter_by(status='pending').count()
-    approved_visits = Visit.query.filter_by(status='approved').count()
-    rejected_visits = Visit.query.filter_by(status='rejected').count()
-    
-    return render_template("DeptDashboard.html", 
-                         recent_visits=visits,
-                         total_visits=total_visits,
-                         pending_visits=pending_visits,
-                         approved_visits=approved_visits,
-                         rejected_visits=rejected_visits)
+        templates = {
+            "pending": "Pending-Request.html",
+            "qr": "QR-Management.html",
+            "history": "History.html",
+            "profile": "Profile.html",
+            "about": "About.html"
+        }
+        return render_template(templates.get(view, "department.html"))
+    return render_template("department.html")
 
 @app.route("/visitor")
 @app.route("/visitor/<view>")
@@ -445,105 +406,6 @@ def approve_visit():
             
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
-
-@app.route("/visitor/history")
-@login_required
-@role_required(["visitor"])
-def visitor_history():
-    try:
-        # Get visits for the current visitor only
-        visits = Visit.query.filter_by(visitor_id=session["user_id"]).order_by(Visit.date.desc()).all()
-        return render_template("visitor-history.html", visits=visits)
-    except Exception as e:
-        print(f"Error retrieving visitor history: {str(e)}")
-        return render_template("visitor-history.html", visits=None)
-
-@app.route("/security/history")
-@login_required
-@role_required(["security"])
-def security_history():
-    try:
-        # Get all visits for security to monitor
-        visits = Visit.query.order_by(Visit.date.desc()).all()
-        return render_template("security-history.html", visits=visits)
-    except Exception as e:
-        print(f"Error retrieving security history: {str(e)}")
-        return render_template("security-history.html", visits=None)
-
-@app.route("/visitor/about")
-@login_required
-@role_required(["visitor"])
-def visitor_about():
-    return render_template("visitor-about.html")
-
-@app.route("/api/verify-visit", methods=["POST"])
-@login_required
-@role_required(["department"])
-def verify_visit():
-    try:
-        data = request.json
-        visit_id = data.get('visit_id')
-        visitor_id = data.get('visitor_id')
-        
-        # Get the visit request
-        visit = Visit.query.get(visit_id)
-        if not visit:
-            return jsonify({"success": False, "message": "Visit request not found"})
-            
-        # Check if QR code is valid
-        visitor_qr = VisitorQR.query.filter_by(visitor_id=visitor_id).first()
-        if not visitor_qr:
-            return jsonify({"success": False, "message": "Invalid QR code"})
-            
-        # Check if QR code is active and not expired
-        if not visitor_qr.is_active:
-            return jsonify({"success": False, "message": "QR code is inactive"})
-            
-        if visitor_qr.valid_until and visitor_qr.valid_until < datetime.now():
-            return jsonify({"success": False, "message": "QR code has expired"})
-            
-        return jsonify({
-            "success": True,
-            "status": visit.status.upper(),
-            "message": "Visit verified successfully"
-        })
-            
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)})
-
-@app.route("/api/update-visit-status", methods=["POST"])
-@login_required
-@role_required(["department"])
-def update_visit_status():
-    try:
-        data = request.json
-        visit_id = data.get('visitId')
-        action = data.get('action')
-        
-        # Get the visit request
-        visit = Visit.query.get(visit_id)
-        if not visit:
-            return jsonify({"success": False, "message": "Visit request not found"})
-            
-        # Update visit status
-        visit.status = action.lower()
-        db.session.commit()
-        
-        # If rejecting, deactivate QR code
-        if action.lower() == 'reject':
-            visitor_qr = VisitorQR.query.filter_by(visitor_id=visit.visitor_id).first()
-            if visitor_qr:
-                visitor_qr.is_active = False
-                db.session.commit()
-        
-        return jsonify({
-            "success": True,
-            "message": f"Visit {action}d successfully"
-        })
-            
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"success": False, "message": str(e)})
 
 @app.route("/logout")
 def logout():
