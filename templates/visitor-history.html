@@ -214,22 +214,58 @@
             <i class="fas fa-sign-out-alt"></i>
             Logout
         </a>
-    </nav>
-
-    <div class="main-content">
-        <div class="history-container">
-            <h1 class="history-title">My Visit History</h1>
-
-            <div class="filters">
+    </nav>    <div class="main-content">
+        <div class="visitor-list-container">
+            <h2>Visit History</h2>
+            
+            <div class="search-container">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Search your visits...">
-                </div>
-                <div class="date-filter">
-                    <input type="date" id="startDate" placeholder="Start Date">
-                    <input type="date" id="endDate" placeholder="End Date">
+                    <input type="text" id="searchInput" placeholder="Search visitor history...">
                 </div>
             </div>
+
+            {% if visits %}
+            <table class="visitor-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Purpose</th>
+                        <th>Date</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in visits %}
+                    <tr>
+                        <td>{{ visit.registration_id }}</td>
+                        <td>{{ visit.name }}</td>
+                        <td>{{ visit.purpose }}</td>
+                        <td>{{ visit.visit_date.strftime('%B %d, %Y') }}</td>
+                        <td>{{ visit.location }}</td>
+                        <td>
+                            <span class="status-badge status-{{ visit.status.lower() }}">
+                                {{ visit.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <button class="print-button" onclick="window.print()">
+                <i class="fas fa-print"></i> Print History
+            </button>
+            {% else %}
+            <div class="no-records">
+                <i class="fas fa-calendar-times"></i>
+                <h2>No Visit Records Found</h2>
+                <p>You haven't made any visits yet. Start by submitting a visit request.</p>
+            </div>
+            {% endif %}
+        </div>
 
             {% if visits %}
             <table class="history-table">
@@ -268,13 +304,10 @@
             </div>
             {% endif %}
         </div>
-    </div>
-
-    <script>
-        // Search functionality
+    </div>    <script>
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const searchText = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('.history-table tbody tr');
+            const rows = document.querySelectorAll('.visitor-table tbody tr');
             
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
@@ -282,28 +315,20 @@
             });
         });
 
-        // Date filter functionality
-        function filterByDate() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            const rows = document.querySelectorAll('.history-table tbody tr');
+        // Print functionality
+        window.onbeforeprint = function() {
+            document.querySelector('.sidebar').style.display = 'none';
+            document.querySelector('.main-content').style.marginLeft = '0';
+            document.querySelector('.print-button').style.display = 'none';
+            document.querySelector('.search-container').style.display = 'none';
+        };
 
-            rows.forEach(row => {
-                const dateCell = row.cells[0].textContent;
-                const visitDate = new Date(dateCell);
-                const start = startDate ? new Date(startDate) : null;
-                const end = endDate ? new Date(endDate) : null;
-
-                let show = true;
-                if (start && visitDate < start) show = false;
-                if (end && visitDate > end) show = false;
-                
-                row.style.display = show ? '' : 'none';
-            });
-        }
-
-        document.getElementById('startDate').addEventListener('change', filterByDate);
-        document.getElementById('endDate').addEventListener('change', filterByDate);
+        window.onafterprint = function() {
+            document.querySelector('.sidebar').style.display = 'flex';
+            document.querySelector('.main-content').style.marginLeft = '240px';
+            document.querySelector('.print-button').style.display = 'flex';
+            document.querySelector('.search-container').style.display = 'block';
+        };
     </script>
 </body>
 </html>

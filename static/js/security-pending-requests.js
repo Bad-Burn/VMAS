@@ -6,20 +6,26 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadPendingRequests() {
-    // Get requests from localStorage or use default empty array
-    const requests = JSON.parse(localStorage.getItem('pendingRequests')) || getMockData();
     const tableBody = document.getElementById('requestTableBody');
     tableBody.innerHTML = '';
     
-    if (requests.length === 0) {
-        showEmptyState(tableBody);
-        return;
-    }
-    
-    requests.forEach(request => {
-        const row = createRequestRow(request);
-        tableBody.appendChild(row);
-    });
+    // Fetch pending requests from server
+    fetch('/security/get_pending_requests')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.requests && data.requests.length > 0) {
+                data.requests.forEach(request => {
+                    const row = createRequestRow(request);
+                    tableBody.appendChild(row);
+                });
+            } else {
+                showEmptyState(tableBody);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading pending requests:', error);
+            showEmptyState(tableBody);
+        });
 }
 
 function createRequestRow(request) {
@@ -103,85 +109,38 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Add new pending request to the table
-function addPendingRequest(request) {
-    const tbody = document.getElementById('requestTableBody');
-    const row = document.createElement('tr');
-    
-    row.innerHTML = `
-        <td>${request.id}</td>
-        <td>${request.name}</td>
-        <td>${request.address}</td>
-        <td>${request.contactNo}</td>
-        <td>${request.purpose}</td>
-        <td>${request.date}</td>
-        <td><span class="status-pending">Pending</span></td>
-        <td>
-            <div class="approval-buttons">
-                <button class="btn-approve"><i class="fas fa-check"></i></button>
-                <button class="btn-reject"><i class="fas fa-times"></i></button>
-            </div>
+function showEmptyState(tableBody) {
+    const emptyRow = document.createElement('tr');
+    emptyRow.innerHTML = `
+        <td colspan="8" style="text-align: center; padding: 20px;">
+            <i class="fas fa-inbox" style="font-size: 24px; color: #ccc; margin-bottom: 10px;"></i>
+            <p style="margin: 0;">No pending requests found</p>
         </td>
     `;
-    
-    tbody.appendChild(row);
+    tableBody.appendChild(emptyRow);
 }
 
-// Load mock data
-const mockRequests = [
-    {
-        id: 'V230501',
-        name: 'John Doe',
-        address: '123 Main St',
-        contactNo: '+63 912 345 6789',
-        purpose: 'Meeting',
-        date: '2025-05-09',
-        status: 'Pending'
-    },
-    {
-        id: 'V230502',
-        name: 'Jane Smith',
-        address: '456 Park Ave',
-        contactNo: '+63 923 456 7890',
-        purpose: 'Inquiry',
-        date: '2025-05-09',
-        status: 'Pending'
-    },
-    {
-        id: 'V230503',
-        name: 'Mike Johnson',
-        address: '789 Oak St',
-        contactNo: '+63 934 567 8901',
-        purpose: 'Delivery',
-        date: '2025-05-09',
-        status: 'Pending'
-    }
-];
+function searchRequests() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#requestTableBody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+}
 
 function generateQR(visitorId, visitorName) {
-    // Store the visitor info in localStorage to pass it to the QR Management page
-    const visitorInfo = {
-        id: visitorId,
-        name: visitorName
-    };
-    localStorage.setItem('pendingVisitorForQR', JSON.stringify(visitorInfo));
-    
-    // Redirect to QR Management page
-    window.location.href = 'QR-Management.html';
+    // Redirect to QR Management page with query parameters
+    window.location.href = `/security/qr?visitorId=${visitorId}&visitorName=${encodeURIComponent(visitorName)}`;
 }
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
-    // Load saved requests or use mock data
-    pendingRequests = JSON.parse(localStorage.getItem('pendingRequests')) || mockRequests;
+    loadPendingRequests();
     
-    // If no saved requests, save mock data
-    if (!localStorage.getItem('pendingRequests')) {
-        localStorage.setItem('pendingRequests', JSON.stringify(mockRequests));
-    }
-    
-    // Display all requests
-    pendingRequests.forEach(request => addPendingRequest(request));
+    // Add event listener for search
+    document.getElementById('searchInput').addEventListener('input', searchRequests);
     
     // Navigation between pages
     document.querySelectorAll('.menu-item').forEach(item => {

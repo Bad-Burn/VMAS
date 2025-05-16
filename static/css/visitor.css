@@ -167,6 +167,107 @@ body {
     transform: translateY(-2px);
 }
 
+/* Visitor history styles */
+.visitor-list-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.visitor-list-container h2 {
+    color: #13334C;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.visitor-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.visitor-table th {
+    background-color: #13334C;
+    color: white;
+    padding: 12px;
+    text-align: left;
+}
+
+.visitor-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.visitor-table tr:hover {
+    background-color: #f5f7fa;
+}
+
+.search-container {
+    margin-bottom: 20px;
+}
+
+.search-box {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 40px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+}
+
+.print-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.print-button:hover {
+    background-color: #45a049;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-approved {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-pending {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.status-rejected {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
 /* Responsive layout */
 @media (max-width: 768px) {
     .form-row {

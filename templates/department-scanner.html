@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Scanner - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/department.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            background-color: #13334C;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 20px 0;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-brand {
+            padding: 0 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .navbar-brand img {
+            width: 40px;
+            height: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item i {
+            width: 24px;
+            margin-right: 10px;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            margin: auto 20px 20px;
+            background: #dc3545;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .main-content {
+            margin-left: 240px;
+            padding: 30px;
+            background-color: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .scanner-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        .section-header h2 {
+            color: #13334C;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .scanner-tabs {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .scanner-tab {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scanner-tab.active {
+            color: #4CAF50;
+            border-bottom-color: #4CAF50;
+        }
+
+        .scanner-view {
+            width: 100%;
+            max-width: 640px;
+            height: 480px;
+            margin: 20px auto;
+            position: relative;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+
+        #qr-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+        }
+
+        .scan-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .scan-result.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            display: block;
+        }
+
+        .scan-result.error {
+            background: #ffebee;
+            color: #c62828;
+            display: block;
+        }
+
+        .control-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .start-button {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .stop-button {
+            background: #f44336;
+            color: white;
+        }
+
+        .file-upload {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+            background: #fafafa;
+        }
+
+        .file-upload.active {
+            display: block;
+        }
+
+        .file-upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+        }
+
+        .file-upload-label i {
+            font-size: 48px;
+            color: #4CAF50;
+        }
+
+        .file-upload-text {
+            color: #666;
+        }
+
+        #qrFileInput {
+            display: none;
+        }
+
+        .upload-button {
+            background: #2196F3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .verification-result {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #e0e0e0;
+            display: none;
+        }
+
+        .verification-result.show {
+            display: block;
+        }
+
+        .visitor-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .verification-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-approved {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-rejected {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+            }
+
+            .scanner-container {
+                padding: 15px;
+            }
+
+            .scanner-view {
+                height: 360px;
+            }
+
+            .visitor-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+            <div>Visitor Management<br>and Analysis System</div>
+        </div>
+
+        <a href="{{ url_for('department') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('department', view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            History
+        </a>
+        <a href="{{ url_for('department', view='scanner') }}" class="menu-item active">
+            <i class="fas fa-qrcode"></i>
+            QR Scanner
+        </a>
+        <a href="{{ url_for('department', view='profile') }}" class="menu-item">
+            <i class="fas fa-user"></i>
+            Profile
+        </a>
+        <a href="{{ url_for('department', view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+
+        <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>
+
+    <div class="main-content">
+        <div class="scanner-container">
+            <div class="section-header">
+                <h2><i class="fas fa-qrcode"></i> QR Code Scanner</h2>
+            </div>
+
+            <div class="scanner-tabs">
+                <button class="scanner-tab active" onclick="switchTab('camera')">
+                    <i class="fas fa-camera"></i> Camera Scanner
+                </button>
+                <button class="scanner-tab" onclick="switchTab('file')">
+                    <i class="fas fa-file-upload"></i> File Upload
+                </button>
+            </div>
+
+            <!-- Camera Scanner View -->
+            <div id="cameraScanner" class="scanner-content active">
+                <div class="scanner-view">
+                    <div id="qr-video"></div>
+                    <div class="scanner-overlay"></div>
+                </div>
+
+                <div class="control-buttons">
+                    <button class="control-button start-button" onclick="startScanner()">
+                        <i class="fas fa-play"></i> Start Scanner
+                    </button>
+                    <button class="control-button stop-button" onclick="stopScanner()">
+                        <i class="fas fa-stop"></i> Stop Scanner
+                    </button>
+                </div>
+            </div>
+
+            <!-- File Upload View -->
+            <div id="fileUploader" class="file-upload">
+                <label class="file-upload-label">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span class="file-upload-text">Drag & drop QR code image or click to upload</span>
+                    <input type="file" id="qrFileInput" accept="image/*" onchange="handleFileUpload()">
+                    <button class="upload-button">
+                        <i class="fas fa-upload"></i> Choose File
+                    </button>
+                </label>
+            </div>
+
+            <!-- Verification Result -->
+            <div id="verificationResult" class="verification-result">
+                <div class="visitor-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Visit ID</div>
+                        <div class="detail-value" id="visitId">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Visitor Name</div>
+                        <div class="detail-value" id="visitorName">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Visit Date</div>
+                        <div class="detail-value" id="visitDate">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value">
+                            <span id="visitStatus" class="verification-status">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script>
+        let html5QrcodeScanner = null;
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.scanner-tab').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector(`.scanner-tab:nth-child(${tab === 'camera' ? '1' : '2'}`).classList.add('active');
+
+            // Show/hide content
+            document.getElementById('cameraScanner').style.display = tab === 'camera' ? 'block' : 'none';
+            document.getElementById('fileUploader').style.display = tab === 'file' ? 'block' : 'none';
+
+            // Stop scanner when switching to file upload
+            if (tab === 'file' && html5QrcodeScanner) {
+                stopScanner();
+            }
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            // Handle the scanned code here
+            try {
+                const data = JSON.parse(decodedText);
+                showVerificationResult(data);
+                verifyVisitor(data);
+            } catch (e) {
+                showError("Invalid QR code format");
+            }
+        }
+
+        function onScanError(errorMessage) {
+            // Handle scan error
+            console.error("QR Scan error:", errorMessage);
+        }
+
+        function startScanner() {
+            if (!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5Qrcode("qr-video");
+            }
+            
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: 250
+                },
+                onScanSuccess,
+                onScanError
+            );
+        }
+
+        function stopScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    html5QrcodeScanner = null;
+                });
+            }
+        }
+
+        async function verifyVisitor(data) {
+            try {
+                const response = await fetch('/department/verify_visitor', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        visitorId: data.visitorId,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('visitStatus').textContent = result.status;
+                    document.getElementById('visitStatus').className = 'verification-status status-' + result.status.toLowerCase();
+                } else {
+                    throw new Error(result.message || 'Verification failed');
+                }
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        function handleFileUpload() {
+            const fileInput = document.getElementById('qrFileInput');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (!html5QrcodeScanner) {
+                        html5QrcodeScanner = new Html5Qrcode("qr-video");
+                    }
+                    
+                    html5QrcodeScanner.scanFile(file, true)
+                        .then(decodedText => {
+                            try {
+                                const data = JSON.parse(decodedText);
+                                showVerificationResult(data);
+                                verifyVisitor(data);
+                            } catch (error) {
+                                showError("Invalid QR code format");
+                            }
+                        })
+                        .catch(err => {
+                            showError("Could not scan QR code from image");
+                        });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function showVerificationResult(data) {
+            document.getElementById('visitId').textContent = data.visitorId || '-';
+            document.getElementById('visitorName').textContent = data.name || '-';
+            document.getElementById('visitDate').textContent = data.date ? new Date(data.date).toLocaleDateString() : '-';
+            document.getElementById('visitStatus').textContent = 'Verifying...';
+            document.getElementById('visitStatus').className = 'verification-status status-pending';
+            document.getElementById('verificationResult').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('verificationResult').style.display = 'block';
+            document.getElementById('visitStatus').textContent = 'Error';
+            document.getElementById('visitStatus').className = 'verification-status status-rejected';
+        }
+
+        // Initialize with camera scanner view
+        document.addEventListener('DOMContentLoaded', () => {
+            switchTab('camera');
+        });
+    </script>
+</body>
+</html>

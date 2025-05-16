@@ -298,10 +298,7 @@
                         <i class="fas fa-print"></i> Print
                     </button>
                 </div>
-            </div>
-
-            {% if visits %}
-            <table class="history-table">
+            </div>            <table class="history-table">
                 <thead>
                     <tr>
                         <th>Visitor</th>
@@ -314,99 +311,24 @@
                         <th>Status</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for visit in visits %}
-                    <tr>
-                        <td>
-                            <div class="visitor-info">
-                                <img src="{{ visit.visitor_photo or url_for('static', filename='images/default-avatar.png') }}" 
-                                     alt="Visitor Photo" class="visitor-photo">
-                                <div>
-                                    <div>{{ visit.name }}</div>
-                                    <small>{{ visit.visitor_id }}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>{{ visit.id }}</td>
-                        <td>{{ visit.purpose }}</td>
-                        <td>{{ visit.location }}</td>
-                        <td>{{ visit.date.strftime('%B %d, %Y') }}</td>
-                        <td>{{ visit.time_in.strftime('%I:%M %p') if visit.time_in else '-' }}</td>
-                        <td>{{ visit.time_out.strftime('%I:%M %p') if visit.time_out else '-' }}</td>
-                        <td>
-                            <span class="status-badge status-{{ visit.status.lower() }}">
-                                {{ visit.status }}
-                            </span>
-                        </td>
-                    </tr>
-                    {% endfor %}
+                <tbody id="historyTableBody">
+                    <!-- Table content will be dynamically populated -->
                 </tbody>
             </table>
 
-            <div class="pagination">
-                <button onclick="changePage(1)"><i class="fas fa-angle-double-left"></i></button>
-                <button onclick="changePage(currentPage-1)"><i class="fas fa-angle-left"></i></button>
-                <button class="active">1</button>
-                <button>2</button>
-                <button>3</button>
-                <button onclick="changePage(currentPage+1)"><i class="fas fa-angle-right"></i></button>
-                <button onclick="changePage(totalPages)"><i class="fas fa-angle-double-right"></i></button>
-            </div>
-            {% else %}
-            <div class="no-records">
+            <div id="noRecords" class="no-records" style="display: none;">
                 <i class="fas fa-clipboard-check"></i>
                 <h2>No Visit Records</h2>
                 <p>There are no visit records in the system yet.</p>
             </div>
-            {% endif %}
+
+            <div class="pagination" id="pagination">
+                <!-- Pagination will be dynamically populated -->
+            </div>
         </div>
     </div>
 
-    <script>
-        // Search functionality
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const searchText = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('.history-table tbody tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchText) ? '' : 'none';
-            });
-        });
-
-        // Date filter functionality
-        function filterByDate() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            const rows = document.querySelectorAll('.history-table tbody tr');
-
-            rows.forEach(row => {
-                const dateCell = row.cells[4].textContent; // Index of the date column
-                const visitDate = new Date(dateCell);
-                const start = startDate ? new Date(startDate) : null;
-                const end = endDate ? new Date(endDate) : null;
-
-                let show = true;
-                if (start && visitDate < start) show = false;
-                if (end && visitDate > end) show = false;
-                
-                row.style.display = show ? '' : 'none';
-            });
-        }
-
-        document.getElementById('startDate').addEventListener('change', filterByDate);
-        document.getElementById('endDate').addEventListener('change', filterByDate);
-
-        // Export functionality
-        function exportToExcel() {
-            // Implementation for exporting to Excel
-            alert('Exporting to Excel...');
-        }
-
-        // Print functionality
-        function printRecords() {
-            window.print();
-        }
-    </script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="{{ url_for('static', filename='js/security-history.js') }}"></script>
 </body>
 </html>

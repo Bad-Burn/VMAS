@@ -74,33 +74,50 @@
             padding: 20px;
             min-height: 100vh;
             background-color: #f5f7fa;
-        }
-
-        .history-container {
+        }        .history-container {
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             padding: 20px;
+            height: 100%;
         }
 
-        .history-title {
-            color: white;
-            background-color: #13334C;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-size: 24px;
-            text-align: center;
-        }
-
-        .actions-bar {
+        .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            color: #13334C;
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .search-bar {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 8px 12px 8px 35px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .action-buttons {
+            text-align: right;
             margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
         }
 
         .search-filters {
@@ -156,29 +173,37 @@
         .btn-print {
             background-color: #2196F3;
             color: white;
-        }
-
-        .history-table {
+        }        .history-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             margin-top: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         .history-table th,
         .history-table td {
             padding: 12px 15px;
             text-align: left;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #dee2e6;
+            background: white;
         }
 
         .history-table th {
-            background-color: #f8f9fa;
-            color: #13334C;
-            font-weight: 600;
+            background-color: #13334C;
+            color: white;
+            font-weight: 500;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .history-table tbody tr:last-child td {
+            border-bottom: none;
         }
 
         .history-table tbody tr:hover {
-            background-color: #f5f7fa;
+            background-color: #f8f9fa;
         }
 
         .visitor-info {
@@ -229,6 +254,120 @@
             margin-bottom: 20px;
         }
 
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: #fff;
+            margin: 50px auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .visit-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .detail-group {
+            margin-bottom: 15px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #13334C;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #666;
+        }
+
+        .visit-timeline {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .timeline-event {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .timeline-event:not(:last-child):before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 24px;
+            bottom: -15px;
+            width: 2px;
+            background-color: #ddd;
+        }
+
+        .event-icon {
+            width: 24px;
+            height: 24px;
+            background-color: #13334C;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .event-details {
+            flex-grow: 1;
+        }
+
+        .event-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .event-description {
+            margin-top: 3px;
+            color: #333;
+        }
+
+        /* Make table rows clickable */
+        .history-table tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .history-table tbody tr:hover {
+            background-color: #f0f4f8;
+        }
+
         .pagination {
             display: flex;
             justify-content: center;
@@ -264,8 +403,7 @@
         }
     </style>
 </head>
-<body>
-    <!-- Sidebar Navigation -->
+<body>    <!-- Sidebar Navigation -->
     <nav class="sidebar">
         <div class="navbar-brand">
             <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
@@ -273,16 +411,20 @@
         </div>
 
         <a href="{{ url_for('department') }}" class="menu-item">
-            <i class="fas fa-building"></i>
+            <i class="fas fa-home"></i>
             Dashboard
-        </a>
-        <a href="{{ url_for('department', view='qr') }}" class="menu-item">
-            <i class="fas fa-qrcode"></i>
-            QR Verification
         </a>
         <a href="{{ url_for('department', view='history') }}" class="menu-item active">
             <i class="fas fa-history"></i>
-            Visit History
+            History
+        </a>
+        <a href="{{ url_for('department', view='scanner') }}" class="menu-item">
+            <i class="fas fa-qrcode"></i>
+            QR Scanner
+        </a>
+        <a href="{{ url_for('department', view='profile') }}" class="menu-item">
+            <i class="fas fa-user"></i>
+            Profile
         </a>
         <a href="{{ url_for('department', view='about') }}" class="menu-item">
             <i class="fas fa-info-circle"></i>
@@ -293,69 +435,42 @@
             <i class="fas fa-sign-out-alt"></i>
             Logout
         </a>
-    </nav>
-
-    <div class="main-content">
+    </nav><div class="main-content">
         <div class="history-container">
-            <h1 class="history-title">{{ session.name }} - Department Visit History</h1>
-
-            <div class="actions-bar">
-                <div class="search-filters">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="Search by visitor name, ID, or purpose...">
-                    </div>
-                    <div class="date-filter">
-                        <input type="date" id="startDate" placeholder="Start Date">
-                        <input type="date" id="endDate" placeholder="End Date">
-                    </div>
-                </div>
-                <div class="action-buttons">
-                    <button class="btn btn-export" onclick="exportToExcel()">
-                        <i class="fas fa-file-excel"></i> Export
-                    </button>
-                    <button class="btn btn-print" onclick="printRecords()">
-                        <i class="fas fa-print"></i> Print
-                    </button>
+            <div class="page-header">
+                <h1>Visitor List</h1>
+                <div class="search-bar">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search">
                 </div>
             </div>
 
-            {% if visits %}
-            <table class="history-table">
+            <div class="action-buttons">
+                <button class="btn btn-print" onclick="printRecords()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+
+            {% if visits %}            <table class="history-table">
                 <thead>
                     <tr>
-                        <th>Visitor</th>
-                        <th>Visit ID</th>
+                        <th>ID</th>
+                        <th>Name</th>
                         <th>Purpose</th>
                         <th>Date</th>
-                        <th>Time In</th>
-                        <th>Time Out</th>
+                        <th>Location</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for visit in visits %}
                     <tr>
-                        <td>
-                            <div class="visitor-info">
-                                <img src="{{ visit.visitor_photo or url_for('static', filename='images/default-avatar.png') }}" 
-                                     alt="Visitor Photo" class="visitor-photo">
-                                <div>
-                                    <div>{{ visit.name }}</div>
-                                    <small>{{ visit.visitor_id }}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>{{ visit.id }}</td>
+                        <td>{{ visit.visitor_id }}</td>
+                        <td>{{ visit.name }}</td>
                         <td>{{ visit.purpose }}</td>
                         <td>{{ visit.date.strftime('%B %d, %Y') }}</td>
-                        <td>{{ visit.time_in.strftime('%I:%M %p') if visit.time_in else '-' }}</td>
-                        <td>{{ visit.time_out.strftime('%I:%M %p') if visit.time_out else '-' }}</td>
-                        <td>
-                            <span class="status-badge status-{{ visit.status.lower() }}">
-                                {{ visit.status }}
-                            </span>
-                        </td>
+                        <td>{{ visit.location or session.name }}</td>
+                        <td>{{ visit.status }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -380,7 +495,123 @@
         </div>
     </div>
 
+    <!-- Visit Details Modal -->
+    <div id="visitModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>Visit Details</h2>
+            <div class="visit-details">
+                <div class="detail-group">
+                    <div class="detail-label">Visitor Name</div>
+                    <div class="detail-value" id="modalVisitorName"></div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Visitor ID</div>
+                    <div class="detail-value" id="modalVisitorId"></div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Visit ID</div>
+                    <div class="detail-value" id="modalVisitId"></div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Purpose</div>
+                    <div class="detail-value" id="modalPurpose"></div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Visit Date</div>
+                    <div class="detail-value" id="modalDate"></div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Time In</div>
+                    <div class="detail-value" id="modalTimeIn"></div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Time Out</div>
+                    <div class="detail-value" id="modalTimeOut"></div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value" id="modalStatus"></div>
+                </div>
+            </div>
+            <div class="visit-timeline">
+                <h3>Visit Timeline</h3>
+                <div id="visitTimeline"></div>
+            </div>
+        </div>
+    </div>
     <script>
+        // Modal Elements
+        const modal = document.getElementById('visitModal');
+        const modalClose = document.querySelector('.modal-close');
+
+        // Close modal when clicking the close button or outside the modal
+        modalClose.onclick = () => modal.style.display = 'none';
+        window.onclick = (event) => {
+            if (event.target === modal) modal.style.display = 'none';
+        }
+
+        // Add click handlers to table rows
+        document.querySelectorAll('.history-table tbody tr').forEach(row => {
+            row.addEventListener('click', function() {
+                const visitorName = this.querySelector('.visitor-info div div').textContent;
+                const visitorId = this.querySelector('.visitor-info small').textContent;
+                const visitId = this.cells[1].textContent;
+                const purpose = this.cells[2].textContent;
+                const date = this.cells[3].textContent;
+                const timeIn = this.cells[4].textContent;
+                const timeOut = this.cells[5].textContent;
+                const status = this.cells[6].textContent.trim();
+
+                // Update modal content
+                document.getElementById('modalVisitorName').textContent = visitorName;
+                document.getElementById('modalVisitorId').textContent = visitorId;
+                document.getElementById('modalVisitId').textContent = visitId;
+                document.getElementById('modalPurpose').textContent = purpose;
+                document.getElementById('modalDate').textContent = date;
+                document.getElementById('modalTimeIn').textContent = timeIn;
+                document.getElementById('modalTimeOut').textContent = timeOut;
+                document.getElementById('modalStatus').textContent = status;
+
+                // Create timeline events
+                const timeline = document.getElementById('visitTimeline');
+                timeline.innerHTML = '';
+                const events = [];
+                events.push({
+                    icon: '<i class="fas fa-clipboard-list"></i>',
+                    time: date,
+                    description: 'Visit registered'
+                });
+                if (timeIn !== '-') {
+                    events.push({
+                        icon: '<i class="fas fa-sign-in-alt"></i>',
+                        time: `${date} ${timeIn}`,
+                        description: 'Visitor checked in'
+                    });
+                }
+                if (timeOut !== '-') {
+                    events.push({
+                        icon: '<i class="fas fa-sign-out-alt"></i>',
+                        time: `${date} ${timeOut}`,
+                        description: 'Visitor checked out'
+                    });
+                }
+                events.forEach(event => {
+                    const eventEl = document.createElement('div');
+                    eventEl.className = 'timeline-event';
+                    eventEl.innerHTML = `
+                        <div class="event-icon">${event.icon}</div>
+                        <div class="event-details">
+                            <div class="event-time">${event.time}</div>
+                            <div class="event-description">${event.description}</div>
+                        </div>
+                    `;
+                    timeline.appendChild(eventEl);
+                });
+                modal.style.display = 'block';
+            });
+        });
+
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const searchText = e.target.value.toLowerCase();
@@ -417,8 +648,9 @@
 
         // Export functionality
         function exportToExcel() {
-            // Implementation for exporting to Excel
-            alert('Exporting to Excel...');
+            const table = document.querySelector('.history-table');
+            const wb = XLSX.utils.table_to_book(table, { sheet: "Visit History" });
+            XLSX.writeFile(wb, 'department_visit_history.xlsx');
         }
 
         // Print functionality

@@ -245,19 +245,17 @@
         <div class="navbar-brand">
             <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
             <div>Visitor Management<br>and Analysis System</div>
-        </div>
-
-        <a href="{{ url_for('department') }}" class="menu-item active">
+        </div>        <a href="{{ url_for('department') }}" class="menu-item active">
             <i class="fas fa-home"></i>
             Dashboard
-        </a>
-        <a href="{{ url_for('department', view='verification') }}" class="menu-item">
-            <i class="fas fa-clipboard-check"></i>
-            Verification List
         </a>
         <a href="{{ url_for('department', view='history') }}" class="menu-item">
             <i class="fas fa-history"></i>
             History
+        </a>
+        <a href="{{ url_for('department', view='scanner') }}" class="menu-item">
+            <i class="fas fa-qrcode"></i>
+            QR Scanner
         </a>
         <a href="{{ url_for('department', view='profile') }}" class="menu-item">
             <i class="fas fa-user"></i>
