@@ -13,8 +13,8 @@
     <!-- Sidebar Navigation -->
     <nav class="sidebar">
         <div class="navbar-brand">
-            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="LSPU Logo">
-            <div>QR Management</div>
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+            <div>Visitor Management<br>and Analysis System</div>
         </div>
         
         <a href="{{ url_for('security') }}" class="menu-item">
@@ -22,7 +22,7 @@
             Dashboard
         </a>
         <a href="{{ url_for('security', view='pending') }}" class="menu-item">
-            <i class="fas fa-clock"></i>
+            <i class="fas fa-clipboard-list"></i>
             Pending Requests
         </a>
         <a href="{{ url_for('security', view='qr') }}" class="menu-item active">
@@ -31,15 +31,19 @@
         </a>
         <a href="{{ url_for('security', view='history') }}" class="menu-item">
             <i class="fas fa-history"></i>
-            History
-        </a>
-        <a href="{{ url_for('security', view='profile') }}" class="menu-item">
-            <i class="fas fa-user"></i>
-            Profile
+            Visit Records
         </a>
         <a href="{{ url_for('security', view='about') }}" class="menu-item">
             <i class="fas fa-info-circle"></i>
             About
+        </a>
+        <a href="{{ url_for('security', view='department') }}" class="menu-item">
+            <i class="fas fa-building"></i>
+            Department
+        </a>
+        <a href="{{ url_for('security', view='profile') }}" class="menu-item">
+            <i class="fas fa-user"></i>
+            Profile
         </a>
         <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
             <i class="fas fa-sign-out-alt"></i>

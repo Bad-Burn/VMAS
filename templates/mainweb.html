@@ -18,7 +18,17 @@
           <option value="department">Department Staff</option>
           <option value="security">Security Guard</option>
         </select>
-        <input type="text" id="userId" name="userId" placeholder="User ID / Department ID / Security ID" required />        <input type="password" id="password" name="password" placeholder="Password" required />        <a href="#">Forgot password?</a>        <button type="submit">Sign In</button>
+        <input type="text" id="userId" name="userId" placeholder="User ID / Department ID / Security ID" required />        <input type="password" id="password" name="password" placeholder="Password" required />
+
+        <!-- Department selection dropdown with search -->
+        <div id="departmentLocationContainer" style="display: none;">
+          <label for="departmentLocation">Department (Optional):</label>
+          <select id="departmentLocation" name="departmentLocation">
+            <option value="">Select Department</option>
+          </select>
+        </div>
+        
+        <a href="#">Forgot password?</a>        <button type="submit">Sign In</button>
         <p>New user? <a href="{{ url_for('register') }}">Register here</a></p>
       </form>
     </main>
@@ -30,13 +40,17 @@
       const role = document.getElementById('role').value;
       const userId = document.getElementById('userId').value;
       const password = document.getElementById('password').value;
+      const departmentLocation = document.getElementById('departmentLocation').value;
       
       console.log('Login attempt:', { role, userId }); // Debug log
 
-        if (!role || !userId || !password) {
+      if (!role || !userId || !password) {
         alert('Please fill in all fields');
         return;
       }
+
+      // Department selection is now optional
+      // Removed required validation for department location
 
       let idPattern;
       switch (role) {
@@ -78,6 +92,9 @@
         formData.append('userId', userId);
         formData.append('password', password);
         formData.append('role', role);
+        if (role === 'department') {
+          formData.append('departmentLocation', departmentLocation);
+        }
 
         const response = await fetch('/login', {
           method: 'POST',
@@ -105,23 +122,54 @@
       }
     });
 
-    // Update placeholder text based on selected role
-    document.getElementById('role').addEventListener('change', function() {
+    // Update placeholder text based on selected role and show/hide location dropdown
+    document.getElementById('role').addEventListener('change', async function() {
       const userId = document.getElementById('userId');
+      const departmentLocationContainer = document.getElementById('departmentLocationContainer');
+      
       switch (this.value) {
         case 'visitor':
           userId.placeholder = 'Visitor ID (e.g., V123456)';
+          departmentLocationContainer.style.display = 'none';
           break;
         case 'department':
           userId.placeholder = 'Department ID (e.g., D123456)';
+          departmentLocationContainer.style.display = 'block';
+          await loadDepartments(); // Load departments when department role is selected
           break;
         case 'security':
           userId.placeholder = 'Security ID (e.g., S123456)';
+          departmentLocationContainer.style.display = 'none';
           break;
         default:
           userId.placeholder = 'User ID / Department ID / Security ID';
+          departmentLocationContainer.style.display = 'none';
       }
     });
+
+    // Function to load departments
+    async function loadDepartments() {
+      const departmentLocation = document.getElementById('departmentLocation');
+      try {
+        const response = await fetch('/get_departments');
+        const data = await response.json();
+        if (data.success) {
+          // Clear existing options except the first one
+          departmentLocation.innerHTML = '<option value="">Select Department</option>';
+          // Add new options
+          data.departments.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept.department_id;
+            option.textContent = dept.department_name;
+            departmentLocation.appendChild(option);
+          });
+        } else {
+          console.error('Failed to load departments:', data.message);
+        }
+      } catch (error) {
+        console.error('Error loading departments:', error);
+      }
+    }
   </script>
 </body>
 </html>

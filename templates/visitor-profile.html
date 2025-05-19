@@ -9,124 +9,117 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .profile-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .profile-card {
             background: white;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            max-width: 800px;
-            margin: 20px auto;
-        }
-
-        .profile-title {
-            color: white;
-            background-color: #13334C;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-size: 24px;
-            text-align: center;
-        }
-
-        .profile-content {
-            display: flex;
-            gap: 30px;
-            padding: 20px;
-        }
-
-        .profile-photo {
-            flex: 0 0 200px;
-            text-align: center;
-        }
-
-        .photo-container {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            overflow: hidden;
-            margin-bottom: 15px;
-            border: 3px solid #13334C;
-        }
-
-        .photo-container img {
+            padding: 2rem;
             width: 100%;
-            height: 100%;
-            object-fit: cover;
         }
 
-        .upload-photo {
-            background: #4CAF50;
+        .profile-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: #13334C;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
+            font-size: 48px;
+        }
+
+        .profile-name {
+            font-size: 24px;
+            color: #13334C;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .profile-id {
+            color: #666;
             font-size: 14px;
-            transition: background-color 0.3s;
+            margin-top: 0.5rem;
         }
 
-        .upload-photo:hover {
-            background: #45a049;
+        .info-section {
+            margin-top: 2rem;
         }
 
-        .profile-details {
-            flex: 1;
+        .info-section h2 {
+            font-size: 18px;
+            color: #13334C;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #eee;
         }
 
         .info-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
         }
 
-        .info-group label {
-            display: block;
+        .info-label {
+            font-weight: 600;
             color: #666;
             font-size: 14px;
-            margin-bottom: 5px;
+            margin-bottom: 0.5rem;
         }
 
-        .info-group input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
-        .info-group input:disabled {
-            background: #f8f9fa;
+        .info-value {
             color: #333;
-        }
-
-        .edit-profile {
-            background: #13334C;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
             font-size: 16px;
-            transition: background-color 0.3s;
-            margin-top: 20px;
         }
 
-        .edit-profile:hover {
-            background: #0d2538;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
         }
 
-        .save-changes {
-            display: none;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-            margin-top: 20px;
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
         }
 
-        .save-changes:hover {
-            background: #45a049;
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #13334C;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .active-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 1rem;
         }
     </style>
 </head>
@@ -134,17 +127,17 @@
     <!-- Sidebar Navigation -->
     <nav class="sidebar">
         <div class="navbar-brand">
-            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
-            <div>Visitor Management<br>and Analysis System</div>
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="LSPU Logo">
+            <div>Visitor Portal</div>
         </div>
-
+        
         <a href="{{ url_for('visitor') }}" class="menu-item">
             <i class="fas fa-home"></i>
             Dashboard
         </a>
         <a href="{{ url_for('visitor', view='form') }}" class="menu-item">
-            <i class="fas fa-clipboard-list"></i>
-            Request Form
+            <i class="fas fa-file-alt"></i>
+            Visit Form
         </a>
         <a href="{{ url_for('visitor', view='qr') }}" class="menu-item">
             <i class="fas fa-qrcode"></i>
@@ -152,7 +145,7 @@
         </a>
         <a href="{{ url_for('visitor', view='history') }}" class="menu-item">
             <i class="fas fa-history"></i>
-            Visit History
+            History
         </a>
         <a href="{{ url_for('visitor', view='profile') }}" class="menu-item active">
             <i class="fas fa-user"></i>
@@ -162,130 +155,78 @@
             <i class="fas fa-info-circle"></i>
             About
         </a>
-
         <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
             <i class="fas fa-sign-out-alt"></i>
             Logout
         </a>
     </nav>
 
+    <!-- Main Content -->
     <div class="main-content">
         <div class="profile-container">
-            <h1 class="profile-title">My Profile</h1>
-            
-            <div class="profile-content">
-                <div class="profile-photo">
-                    <div class="photo-container">
-                        <img src="{{ user.photo_url or url_for('static', filename='images/default-avatar.png') }}" 
-                             alt="Profile Photo" id="profilePhoto">
+            <!-- Profile Card -->
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user"></i>
                     </div>
-                    <button class="upload-photo" onclick="document.getElementById('photoInput').click()">
-                        <i class="fas fa-camera"></i> Change Photo
-                    </button>
-                    <input type="file" id="photoInput" style="display: none" accept="image/*">
+                    <h1 class="profile-name">{{ user.name }}</h1>
+                    <div class="profile-id">{{ user.id }}</div>
+                    <div class="active-indicator">
+                        <i class="fas fa-check-circle"></i> Active Visitor
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h2>Contact Information</h2>
+                    <div class="info-group">
+                        <div class="info-label">Email Address</div>
+                        <div class="info-value">{{ user.email }}</div>
+                    </div>
+                    {% if user.contact_no %}
+                    <div class="info-group">
+                        <div class="info-label">Contact Number</div>
+                        <div class="info-value">{{ user.contact_no }}</div>
+                    </div>
+                    {% endif %}
+                    {% if user.address %}
+                    <div class="info-group">
+                        <div class="info-label">Address</div>
+                        <div class="info-value">{{ user.address }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Visit Statistics -->
+            <div class="profile-card">
+                <div class="info-section">
+                    <h2>Visit Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ user.total_visits }}</div>
+                            <div class="stat-label">Total Visits</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">{{ user.completed_visits }}</div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">{{ user.recent_visits }}</div>
+                            <div class="stat-label">Last 30 Days</div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="profile-details">
+                <div class="info-section">
+                    <h2>Account Details</h2>
                     <div class="info-group">
-                        <label>Visitor ID</label>
-                        <input type="text" value="{{ user.id }}" disabled>
+                        <div class="info-label">Member Since</div>
+                        <div class="info-value">{{ user.member_since.strftime('%B %d, %Y') }}</div>
                     </div>
-
-                    <div class="info-group">
-                        <label>Full Name</label>
-                        <input type="text" value="{{ user.name }}" id="fullName" disabled>
-                    </div>
-
-                    <div class="info-group">
-                        <label>Email Address</label>
-                        <input type="email" value="{{ user.email }}" id="email" disabled>
-                    </div>
-
-                    <div class="info-group">
-                        <label>Contact Number</label>
-                        <input type="tel" value="{{ user.contact_no }}" id="contactNo" disabled>
-                    </div>
-
-                    <div class="info-group">
-                        <label>Address</label>
-                        <input type="text" value="{{ user.address }}" id="address" disabled>
-                    </div>
-
-                    <button class="edit-profile" id="editButton">
-                        <i class="fas fa-edit"></i> Edit Profile
-                    </button>
-                    <button class="save-changes" id="saveButton">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
                 </div>
             </div>
         </div>
     </div>
-
-    <script>
-        document.getElementById('editButton').addEventListener('click', function() {
-            const inputs = document.querySelectorAll('#fullName, #email, #contactNo, #address');
-            inputs.forEach(input => input.disabled = false);
-            this.style.display = 'none';
-            document.getElementById('saveButton').style.display = 'block';
-        });
-
-        document.getElementById('saveButton').addEventListener('click', async function() {
-            const data = {
-                name: document.getElementById('fullName').value,
-                email: document.getElementById('email').value,
-                contact_no: document.getElementById('contactNo').value,
-                address: document.getElementById('address').value
-            };
-
-            try {
-                const response = await fetch('/update_profile', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    alert('Profile updated successfully!');
-                    const inputs = document.querySelectorAll('#fullName, #email, #contactNo, #address');
-                    inputs.forEach(input => input.disabled = true);
-                    this.style.display = 'none';
-                    document.getElementById('editButton').style.display = 'block';
-                } else {
-                    alert('Failed to update profile: ' + result.message);
-                }
-            } catch (error) {
-                alert('An error occurred while updating your profile');
-            }
-        });
-
-        // Handle photo upload
-        document.getElementById('photoInput').addEventListener('change', async function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append('photo', file);
-
-            try {
-                const response = await fetch('/upload_photo', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    document.getElementById('profilePhoto').src = result.photo_url;
-                } else {
-                    alert('Failed to upload photo: ' + result.message);
-                }
-            } catch (error) {
-                alert('An error occurred while uploading your photo');
-            }
-        });
-    </script>
 </body>
 </html>

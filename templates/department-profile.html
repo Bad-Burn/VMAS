@@ -271,15 +271,28 @@
     <div class="main-content">
         <div class="profile-container">
             <div class="profile-header">
-                <h1>{{ department.name }}</h1>
-                <p>Department Profile</p>
-                <button class="edit-button">
-                    <i class="fas fa-edit"></i>
-                    Edit Profile
-                </button>
+                <h1>{{ staff.staff_name }}</h1>
+                <p>{{ department.department_name }}</p>
             </div>
-
+            
             <div class="profile-content">
+                <div class="section">
+                    <div class="section-header">
+                        <i class="fas fa-user"></i>
+                        <h2>Staff Information</h2>
+                    </div>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <div class="info-label">Staff ID</div>
+                            <div class="info-value">{{ staff.staff_id }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Email</div>
+                            <div class="info-value">{{ staff.email }}</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="section">
                     <div class="section-header">
                         <i class="fas fa-building"></i>
@@ -288,26 +301,18 @@
                     <div class="info-list">
                         <div class="info-item">
                             <div class="info-label">Department ID</div>
-                            <div class="info-value">{{ department.id }}</div>
+                            <div class="info-value">{{ department.department_id }}</div>
                         </div>
                         <div class="info-item">
-                            <div class="info-label">Location</div>
-                            <div class="info-value">{{ department.location }}</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Contact Email</div>
+                            <div class="info-label">Department Email</div>
                             <div class="info-value">{{ department.email }}</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Contact Phone</div>
-                            <div class="info-value">{{ department.phone }}</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="section">
                     <div class="section-header">
-                        <i class="fas fa-chart-line"></i>
+                        <i class="fas fa-chart-bar"></i>
                         <h2>Visit Statistics</h2>
                     </div>
                     <div class="stats-grid">
@@ -317,7 +322,7 @@
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">{{ monthly_visits }}</div>
-                            <div class="stat-label">This Month</div>
+                            <div class="stat-label">Monthly Visits</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">{{ avg_daily_visits }}</div>

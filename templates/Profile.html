@@ -8,6 +8,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/security.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        window.user = {{ user|tojson|safe }};
+    </script>
+    <script>
+        var userData = {{ user|tojson|safe }};
+    </script>
     <style>
         /* Sidebar styles */
         .sidebar {
@@ -80,7 +86,27 @@
             padding: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
+        .profile-info label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #13334C;
+        }
+
+        .profile-info p {
+            color: #13334C;
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .profile-header h2 {
+            color: #13334C;
+        }
     </style>
+    <script>
+        // Pass server-side user data to JavaScript
+        const user = {{ user|tojson|safe }};
+    </script>
 </head>
 <body>
     <!-- Sidebar Navigation -->
@@ -91,7 +117,6 @@
             <div>Visitor Management<br>and Analysis System</div>
         </div>
 
-        {% if session.role == 'security' %}
         <a href="{{ url_for('security') }}" class="menu-item">
             <i class="fas fa-home"></i>
             Dashboard
@@ -104,26 +129,23 @@
             <i class="fas fa-qrcode"></i>
             QR Management
         </a>
-        {% endif %}
-        <a href="{{ url_for(session.role, view='history') }}" class="menu-item">
+        <a href="{{ url_for('security', view='history') }}" class="menu-item">
             <i class="fas fa-history"></i>
-            History
+            Visit Records
         </a>
-        <a href="{{ url_for(session.role, view='profile') }}" class="menu-item active">
-            <i class="fas fa-user"></i>
-            Profile
-        </a>
-        <a href="{{ url_for(session.role, view='about') }}" class="menu-item">
+        <a href="{{ url_for('security', view='about') }}" class="menu-item">
             <i class="fas fa-info-circle"></i>
             About
         </a>
-        {% if session.role == 'security' %}
         <a href="{{ url_for('security', view='department') }}" class="menu-item">
             <i class="fas fa-building"></i>
             Department
         </a>
-        {% endif %}
-        <a href="{{ url_for('logout') }}" class="logout-btn">
+        <a href="{{ url_for('security', view='profile') }}" class="menu-item active">
+            <i class="fas fa-user"></i>
+            Profile
+        </a>
+        <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
             <i class="fas fa-sign-out-alt"></i>
             Logout
         </a>
@@ -135,7 +157,8 @@
         <header class="header">
             <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
             <h1>My Profile</h1>
-        </header>        <!-- Profile Section -->
+        </header>
+        <!-- Profile Section -->
         <section class="profile-section">
             <div class="profile-container">
                 <div class="profile-header">
@@ -145,17 +168,17 @@
                 <div class="profile-info">
                     <div class="info-group">
                         <label>Email Address</label>
-                        <p id="emailDisplay"></p>
+                        <p id="emailDisplay">{{ user.email }}</p>
                     </div>
 
                     <div class="info-group">
                         <label>Full Name</label>
-                        <p id="nameDisplay"></p>
+                        <p id="nameDisplay">{{ user.username }}</p>
                     </div>
 
                     <div class="info-group">
                         <label>Security Guard ID</label>
-                        <p id="securityIdDisplay"></p>
+                        <p id="securityIdDisplay">{{ user.security_id }}</p>
                     </div>
                 </div>
             </div>

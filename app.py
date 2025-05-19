@@ -86,8 +86,6 @@ def home():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
-        if "user_id" in session:
-            return redirect(url_for(session["role"]))
         return render_template("mainweb.html")
         
     try:
@@ -95,7 +93,6 @@ def login():
         user_id = data.get("userId", '').strip()
         password = data.get("password", '').strip()
         role = data.get("role", '').strip()
-
         print(f"Login attempt - ID: {user_id}, Role: {role}")  # Debug log
 
         # Validate input
@@ -113,20 +110,24 @@ def login():
         if role == 'visitor':
             cursor.execute("""
                 SELECT visitor_id as id, 'visitor' as role, visitor_name as name, 
-                password_hash as password, email 
-                FROM visitors WHERE visitor_id = %s
+                       password_hash, email 
+                FROM visitors 
+                WHERE visitor_id = %s
             """, (user_id,))
         elif role == 'department':
+            # Allow any department staff to log in and select department
             cursor.execute("""
-                SELECT staff_id as id, 'department' as role, staff_name as name, 
-                password_hash as password, email 
-                FROM department_staff WHERE staff_id = %s
-            """, (user_id,))
+                SELECT staff_id as id, 'department' as role, staff_name as name,
+                       password_hash, email, department_id
+                FROM department_staff 
+                WHERE staff_id = %s OR email = %s
+            """, (user_id, user_id))
         elif role == 'security':
             cursor.execute("""
                 SELECT security_id as id, 'security' as role, username as name, 
-                password_hash as password, email 
-                FROM security_guards WHERE security_id = %s
+                       password_hash, email 
+                FROM security_guards 
+                WHERE security_id = %s
             """, (user_id,))
         
         user = cursor.fetchone()
@@ -137,31 +138,53 @@ def login():
             conn.close()
             return jsonify({"success": False, "message": "User not found"})
 
-        if not check_password_hash(user['password'], password):
+        # Verify password
+        if not check_password_hash(user['password_hash'], password):
             cursor.close()
             conn.close()
-            return jsonify({"success": False, "message": "Invalid password"})
+            return jsonify({"success": False, "message": "Invalid password"})            # For department staff, optionally store department info
+        if role == 'department':
+            department_id = data.get('departmentLocation')
+            
+            if department_id:
+                # Get department information if a department was selected
+                cursor.execute("""
+                    SELECT department_id, department_name, email 
+                    FROM departments
+                    WHERE department_id = %s
+                """, (department_id,))
+                department = cursor.fetchone()
 
-        # User authenticated successfully, set up session
-        cursor.close()
-        conn.close()
-        
+                if department:
+                    # Update staff's department_id
+                    cursor.execute("""
+                        UPDATE department_staff 
+                        SET department_id = %s
+                        WHERE staff_id = %s
+                    """, (department_id, user['id']))
+                    conn.commit()
+
+                    # Store department info in session
+                    session["department_id"] = department['department_id']
+                    session["department_name"] = department['department_name']
+            else:
+                # If no department selected, just set default session values
+                session["department_id"] = None
+                session["department_name"] = "No Department Selected"
+
+        # Set up session
         session.permanent = True
         session["user_id"] = user['id']
-        session["role"] = user['role']
-        session["name"] = user['name']
+        session["role"] = role
+        session["name"] = user.get('name', '')
 
-        # Return appropriate redirect
-        redirects = {
-            "security": "/security",
-            "department": "/department",
-            "visitor": "/visitor"
-        }
-        
-        if role in redirects:
-            return jsonify({"success": True, "redirect": redirects[role]})
-        return jsonify({"success": False, "message": "Invalid role"})
-
+        # Return success
+        cursor.close()
+        conn.close()
+        return jsonify({
+            "success": True,
+            "redirect": f"/{role}"
+        })
     except Exception as e:
         print(f"Login error: {str(e)}")
         return jsonify({"success": False, "message": "An error occurred during login"})
@@ -492,6 +515,88 @@ def department(view=None):
     cursor = conn.cursor(dictionary=True)
 
     try:
+        if view == 'profile':
+            print(f"Loading profile for staff {session.get('user_id')} in department {session.get('department_id')}")
+            
+            # Get staff info first
+            cursor.execute("""
+                SELECT staff_id, staff_name, email, department_id
+                FROM department_staff 
+                WHERE staff_id = %s
+            """, (session.get('user_id'),))
+            
+            staff_result = cursor.fetchone()
+            if not staff_result:
+                cursor.close()
+                conn.close()
+                return "Department staff not found", 404
+
+            # Get department info
+            department_id = staff_result['department_id'] or session.get('department_id')
+            if department_id:
+                cursor.execute("""
+                    SELECT department_id, department_name, email as dept_email
+                    FROM departments 
+                    WHERE department_id = %s
+                """, (department_id,))
+                dept_result = cursor.fetchone()
+            else:
+                dept_result = {
+                    'department_id': None,
+                    'department_name': 'No Department Selected',
+                    'dept_email': None
+                }
+
+            # Get visit statistics if department is selected
+            if department_id:
+                cursor.execute("""
+                    SELECT 
+                        COUNT(registration_id) as total_visits,
+                        SUM(CASE 
+                            WHEN visit_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                            THEN 1 
+                            ELSE 0 
+                        END) as monthly_visits,
+                        ROUND(COUNT(registration_id) / 30.0, 1) as avg_daily_visits
+                    FROM visitor_registrations
+                    WHERE department_id = %s AND status != 'rejected'
+                """, (department_id,))
+                stats_result = cursor.fetchone()
+            else:
+                stats_result = {
+                    'total_visits': 0,
+                    'monthly_visits': 0,
+                    'avg_daily_visits': 0
+                }
+
+            cursor.close()
+            conn.close()
+
+            # Structure the data
+            staff = {
+                'staff_id': staff_result['staff_id'],
+                'staff_name': staff_result['staff_name'],
+                'email': staff_result['email']
+            }
+
+            department_info = {
+                'department_id': department_id,
+                'department_name': dept_result['department_name'] if department_id else 'No Department Selected',
+                'email': dept_result.get('dept_email')
+            }
+
+            stats_data = {
+                'total_visits': stats_result['total_visits'] or 0,
+                'monthly_visits': stats_result['monthly_visits'] or 0,
+                'avg_daily_visits': stats_result['avg_daily_visits'] or 0
+            }
+
+            return render_template('department-profile.html', 
+                                staff=staff,
+                                department=department_info,
+                                **stats_data)
+                                
+        # Rest of the department route code
         # Get visitor statistics for the dashboard
         cursor.execute("""
             SELECT 
@@ -505,7 +610,7 @@ def department(view=None):
                 ROUND(AVG(TIMESTAMPDIFF(HOUR, created_at, time_in)), 1) as avg_response_time
             FROM visitor_registrations 
             WHERE department_id = %s
-        """, (session.get('user_id'),))
+        """, (session.get('department_id'),))
         stats = cursor.fetchone()
 
         if not stats:
@@ -520,23 +625,7 @@ def department(view=None):
                 'avg_response_time': 0
             }
 
-        # Get recent visits for the dashboard
-        cursor.execute("""
-            SELECT 
-                vr.registration_id,
-                v.visitor_name as name,
-                vr.purpose,
-                vr.visit_date,
-                vr.status,
-                vr.created_at
-            FROM visitor_registrations vr
-            JOIN visitors v ON v.visitor_id = vr.visitor_id
-            WHERE vr.department_id = %s
-            ORDER BY vr.created_at DESC
-            LIMIT 10
-        """, (session.get('user_id'),))
-        recent_visits = cursor.fetchall() or []
-
+        # Handle other views
         if view:
             templates = {
                 "scanner": "department-scanner.html",  # QR Scanner page
@@ -544,55 +633,11 @@ def department(view=None):
                 "profile": "department-profile.html",  # Department profile
                 "about": "department-about.html"       # About page
             }
-            
-            if view == 'history':
-                cursor.execute("""
-                    SELECT 
-                        vr.registration_id,
-                        v.visitor_id,
-                        v.visitor_name as name,
-                        vr.purpose,
-                        vr.visit_date as date,
-                        vr.status,
-                        vr.time_in,
-                        vr.time_out,
-                        vr.created_at,
-                        d.department_name as location
-                    FROM visitor_registrations vr
-                    JOIN visitors v ON v.visitor_id = vr.visitor_id
-                    LEFT JOIN departments d ON d.department_id = vr.department_id
-                    WHERE vr.department_id = %s 
-                    ORDER BY vr.visit_date DESC, vr.created_at DESC
-                    LIMIT 20
-                """, (session.get('user_id'),))
-                visits = cursor.fetchall() or []
-                cursor.close()
-                conn.close()
-                return render_template('department-history.html', visits=visits)
-            
-            elif view == 'profile':
-                # Get department info
-                cursor.execute("""
-                    SELECT * FROM departments WHERE department_id = %s
-                """, (session.get('user_id'),))
-                department = cursor.fetchone()
-                
-                cursor.close()
-                conn.close()
-                return render_template('department-profile.html', 
-                                    department=department,
-                                    total_visits=stats['total_visits'],
-                                    monthly_visits=stats['monthly_visits'],
-                                    avg_daily_visits=stats.get('avg_response_time', 0))
-
-            cursor.close()
-            conn.close()
             return render_template(templates.get(view, "DeptDashboard.html"))
 
         cursor.close()
         conn.close()
         return render_template("DeptDashboard.html",
-                           recent_visits=recent_visits,
                            total_visits=stats['total_visits'],
                            pending_requests=stats['pending_visits'],
                            approved_visits=stats['today_approved'],
@@ -656,44 +701,56 @@ def visitor(view=None):
                     cursor.close()
                 if 'conn' in locals():
                     conn.close()
-                return "Error processing QR code", 500
-
-        # Handle other views
-        elif view == 'history':
+                return "Error processing QR code", 500        # Handle profile view
+        elif view == 'profile':
             conn = get_db_connection()
             if not conn:
                 return "Database connection error", 500
 
             cursor = conn.cursor(dictionary=True)
-            try:                # Get visitor's visit history
+            try:
+                # Get visitor's profile information with visit statistics
                 cursor.execute("""
+                    WITH visit_stats AS (
+                        SELECT 
+                            COUNT(*) as total_visits,
+                            COUNT(IF(status = 'completed', 1, NULL)) as completed_visits,
+                            COUNT(IF(DATE(visit_date) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY), 1, NULL)) as recent_visits
+                        FROM visitor_registrations
+                        WHERE visitor_id = %s
+                    )
                     SELECT 
-                        vr.registration_id,
+                        v.visitor_id as id,
                         v.visitor_name as name,
-                        vr.purpose,
-                        vr.visit_date,
-                        d.department_name as location,
-                        vr.status,
-                        vr.created_at
-                    FROM visitor_registrations vr
-                    JOIN visitors v ON v.visitor_id = vr.visitor_id
-                    JOIN departments d ON d.department_id = vr.department_id
-                    WHERE vr.visitor_id = %s 
-                    ORDER BY vr.visit_date DESC, vr.created_at DESC
-                """, (session['user_id'],))
-                visits = cursor.fetchall()
+                        v.email,
+                        v.address,
+                        v.contact_no,
+                        v.qr_code_path as photo_url,
+                        vs.total_visits,
+                        vs.completed_visits,
+                        vs.recent_visits,
+                        v.created_at as member_since
+                    FROM visitors v
+                    CROSS JOIN visit_stats vs
+                    WHERE v.visitor_id = %s
+                """, (session['user_id'], session['user_id']))
                 
+                visitor_info = cursor.fetchone()
                 cursor.close()
                 conn.close()
-                return render_template('visitor-history.html', visits=visits)
                 
+                if not visitor_info:
+                    return "Visitor not found", 404
+
+                return render_template('visitor-profile.html', user=visitor_info)
+
             except Exception as e:
-                print(f"Error in visitor history: {str(e)}")
+                print(f"Error loading visitor profile: {str(e)}")
                 if 'cursor' in locals():
                     cursor.close()
                 if 'conn' in locals():
                     conn.close()
-                return "Error loading visit history", 500
+                return "Error loading profile", 500
 
         # Handle other views
         else:
@@ -954,6 +1011,7 @@ def verify_visitor():
     try:
         data = request.get_json()
         visitor_id = data.get('visitor_id')
+        visit_id = data.get('visit_id')
 
         if not visitor_id:
             return jsonify({
@@ -973,19 +1031,22 @@ def verify_visitor():
         # Check if visitor has an approved visit for today
         cursor.execute("""
             SELECT 
-                vr.*, 
+                vr.*,
                 v.visitor_name,
                 v.email,
-                v.phone 
+                v.contact_no,
+                v.address,
+                d.department_name
             FROM visitor_registrations vr
             JOIN visitors v ON vr.visitor_id = v.visitor_id
+            JOIN departments d ON vr.department_id = d.department_id
             WHERE vr.visitor_id = %s 
             AND vr.department_id = %s
-            AND vr.status = 'approved'
+            AND vr.status IN ('approved', 'active')
             AND vr.visit_date = CURDATE()
-            AND (vr.time_out IS NULL OR vr.time_in IS NULL)
+            AND (vr.time_out IS NULL)
         """, (visitor_id, session['user_id']))
-        
+
         visit = cursor.fetchone()
 
         if not visit:
@@ -997,40 +1058,42 @@ def verify_visitor():
                 "message": "No valid visit found for this visitor today"
             })
 
+        current_time = datetime.now()
+        current_time_str = current_time.strftime('%I:%M %p')
+
         # Check if visitor is checking in or out
         if visit['time_in'] is None:
             # Check in
             cursor.execute("""
                 UPDATE visitor_registrations 
                 SET status = 'active',
-                    time_in = NOW()
+                    time_in = %s
                 WHERE registration_id = %s
-            """, (visit['registration_id'],))
+            """, (current_time, visit['registration_id']))
 
             action = "checked in"
-            current_time = datetime.now().strftime('%I:%M %p')
         else:
             # Check out
             cursor.execute("""
                 UPDATE visitor_registrations 
                 SET status = 'completed',
-                    time_out = NOW()
+                    time_out = %s
                 WHERE registration_id = %s
-            """, (visit['registration_id'],))
+            """, (current_time, visit['registration_id']))
 
             action = "checked out"
-            current_time = datetime.now().strftime('%I:%M %p')
 
         # Log the action
         cursor.execute("""
             INSERT INTO system_logs 
-            (staff_id, action, related_department_id, ip_address)
-            VALUES (%s, %s, %s, %s)
+            (staff_id, action, related_department_id, ip_address, timestamp)
+            VALUES (%s, %s, %s, %s, %s)
         """, (
             session['user_id'],
-            f"Visitor {visitor_id} {action} at {current_time}",
+            f"Visitor {visitor_id} {action} at {current_time_str}",
             session['user_id'],
-            request.remote_addr
+            request.remote_addr,
+            current_time
         ))
 
         conn.commit()
@@ -1042,12 +1105,16 @@ def verify_visitor():
             "status": "Valid",
             "message": f"Visitor successfully {action}",
             "visitor": {
+                "id": visitor_id,
                 "name": visit['visitor_name'],
                 "email": visit['email'],
-                "phone": visit['phone'],
+                "phone": visit['contact_no'],
+                "address": visit['address'],
                 "purpose": visit['purpose'],
+                "department": visit['department_name'],
+                "visitDate": visit['visit_date'].strftime('%B %d, %Y'),
                 "action": action,
-                "time": current_time
+                "time": current_time_str
             }
         })
 
@@ -1189,9 +1256,15 @@ def generate_qr():
         
         # Verify visitor is approved
         cursor.execute("""
-            SELECT v.*, vr.visit_date, vr.department_id
+            SELECT 
+                v.*,
+                vr.visit_date,
+                vr.purpose,
+                d.department_id,
+                d.department_name
             FROM visitors v
             JOIN visitor_registrations vr ON v.visitor_id = vr.visitor_id
+            JOIN departments d ON vr.department_id = d.department_id
             WHERE v.visitor_id = %s AND vr.status = 'approved'
             ORDER BY vr.visit_date DESC LIMIT 1
         """, (visitor_id,))
@@ -1206,8 +1279,12 @@ def generate_qr():
         qr_data = {
             "visitor_id": visitor_id,
             "name": visitor["visitor_name"],
-            "visit_date": visitor["visit_date"].isoformat(),
-            "department": visitor["department_id"],
+            "email": visitor["email"],
+            "phone": visitor["contact_no"],
+            "address": visitor["address"],
+            "purpose": visitor["purpose"],
+            "visitDate": visitor["visit_date"].strftime('%B %d, %Y'),
+            "department": visitor["department_name"],
             "timestamp": datetime.utcnow().isoformat()
         }
 
@@ -1328,6 +1405,34 @@ def get_pending_requests():
             "success": False,
             "message": f"Error getting pending requests: {str(e)}"
         })
+
+@app.route("/get_departments")
+def get_departments():
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"success": False, "message": "Database connection error"})
+
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute("""
+            SELECT department_id, department_name 
+            FROM departments 
+            ORDER BY department_name
+        """)
+        
+        departments = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"success": True, "departments": departments})
+    except Exception as e:
+        print(f"Error fetching departments: {str(e)}")
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
+        return jsonify({"success": False, "message": str(e)})
 
 if __name__ == "__main__":
     app.run(debug=True)
