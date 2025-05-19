@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for, session
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from datetime import timedelta, datetime
@@ -44,17 +44,23 @@ from models.system_log import SystemLog
 
 def generate_qr_code(data):
     qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_H,
-        box_size=10,
-        border=4,
+        version=None,  # Allow automatic versioning
+        error_correction=qrcode.constants.ERROR_CORRECT_H,  # Use high error correction
+        box_size=12,  # Increase box size for better readability
+        border=5,     # Slightly larger border
     )
+    # Ensure data is properly encoded
+    if isinstance(data, str):
+        data = data.encode('utf-8')
     qr.add_data(data)
     qr.make(fit=True)
 
+    # Create image with higher contrast
     img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Save with high quality settings
     img_buffer = io.BytesIO()
-    img.save(img_buffer, format='PNG')
+    img.save(img_buffer, format='PNG', optimize=False, quality=100)
     img_str = base64.b64encode(img_buffer.getvalue()).decode()
     return img_str
 
@@ -1012,6 +1018,9 @@ def verify_visitor():
         data = request.get_json()
         visitor_id = data.get('visitor_id')
         visit_id = data.get('visit_id')
+        purpose = data.get('purpose')
+        department = data.get('department')
+        timestamp = datetime.fromisoformat(data.get('timestamp'))
 
         if not visitor_id:
             return jsonify({
@@ -1044,8 +1053,9 @@ def verify_visitor():
             AND vr.department_id = %s
             AND vr.status IN ('approved', 'active')
             AND vr.visit_date = CURDATE()
-            AND (vr.time_out IS NULL)
-        """, (visitor_id, session['user_id']))
+            AND (vr.visit_date = CURDATE())
+            AND (vr.time_out IS NULL OR vr.status = 'active')
+        """, (visitor_id, session.get('department_id')))
 
         visit = cursor.fetchone()
 
@@ -1071,7 +1081,26 @@ def verify_visitor():
                 WHERE registration_id = %s
             """, (current_time, visit['registration_id']))
 
+            # Create history entry for check-in
+            cursor.execute("""
+                INSERT INTO visit_history
+                (registration_id, visitor_id, department_id, action, timestamp, details)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (
+                visit['registration_id'],
+                visitor_id,
+                session.get('department_id'),
+                'check_in',
+                current_time,
+                json.dumps({
+                    'time_in': current_time.strftime('%H:%M:%S'),
+                    'department': visit['department_name'],
+                    'purpose': visit['purpose']
+                })
+            ))
+
             action = "checked in"
+            status = "Active"
         else:
             # Check out
             cursor.execute("""
@@ -1082,17 +1111,17 @@ def verify_visitor():
             """, (current_time, visit['registration_id']))
 
             action = "checked out"
+            status = "Completed"
 
-        # Log the action
+        # Log the action in system_logs
         cursor.execute("""
             INSERT INTO system_logs 
-            (staff_id, action, related_department_id, ip_address, timestamp)
-            VALUES (%s, %s, %s, %s, %s)
+            (staff_id, action, related_department_id, created_at)
+            VALUES (%s, %s, %s, %s)
         """, (
-            session['user_id'],
-            f"Visitor {visitor_id} {action} at {current_time_str}",
-            session['user_id'],
-            request.remote_addr,
+            session.get('user_id'),
+            f"Visitor {visit['visitor_name']} ({visitor_id}) {action} at {current_time_str}",
+            session.get('department_id'),
             current_time
         ))
 
@@ -1102,8 +1131,7 @@ def verify_visitor():
 
         return jsonify({
             "success": True,
-            "status": "Valid",
-            "message": f"Visitor successfully {action}",
+            "status": status,
             "visitor": {
                 "id": visitor_id,
                 "name": visit['visitor_name'],
@@ -1283,7 +1311,8 @@ def generate_qr():
             "phone": visitor["contact_no"],
             "address": visitor["address"],
             "purpose": visitor["purpose"],
-            "visitDate": visitor["visit_date"].strftime('%B %d, %Y'),
+            # Format visitDate in ISO format for better compatibility
+            "visitDate": visitor["visit_date"].strftime('%Y-%m-%d'),
             "department": visitor["department_name"],
             "timestamp": datetime.utcnow().isoformat()
         }
@@ -1310,32 +1339,41 @@ def generate_qr():
         """, (visitor_id,))
         existing_qr = cursor.fetchone()
 
-        if existing_qr:
-            # Update existing QR code
-            cursor.execute("""
-                UPDATE visitor_qr 
-                SET qr_code = %s,
-                    valid_until = %s,
-                    is_active = TRUE,
-                    updated_at = NOW()
-                WHERE visitor_id = %s
-            """, (img_str, visitor["visit_date"], visitor_id))
-        else:
-            # Create new QR code entry
-            cursor.execute("""
-                INSERT INTO visitor_qr 
-                (visitor_id, qr_code, valid_until, is_active)
-                VALUES (%s, %s, %s, TRUE)
-            """, (visitor_id, img_str, visitor["visit_date"]))
+        try:
+            if existing_qr:
+                # Update existing QR code
+                cursor.execute("""
+                    UPDATE visitor_qr 
+                    SET qr_code = %s,
+                        valid_until = %s,
+                        is_active = TRUE
+                    WHERE visitor_id = %s
+                """, (img_str, visitor["visit_date"], visitor_id))
+            else:
+                # Create new QR code entry
+                cursor.execute("""
+                    INSERT INTO visitor_qr 
+                    (visitor_id, qr_code, valid_until, is_active)
+                    VALUES (%s, %s, %s, TRUE)
+                """, (visitor_id, img_str, visitor["visit_date"]))
 
-        conn.commit()
-        cursor.close()
-        conn.close()
+            conn.commit()
+            cursor.close()
+            conn.close()
 
-        return jsonify({
-            "success": True,
-            "message": "QR code generated successfully"
-        })
+            return jsonify({
+                "success": True,
+                "message": "QR code generated successfully"
+            })
+        except Exception as db_error:
+            print(f"Database error: {str(db_error)}")
+            conn.rollback()
+            cursor.close()
+            conn.close()
+            return jsonify({
+                "success": False,
+                "message": f"Database error: {str(db_error)}"
+            })
 
     except Exception as e:
         print(f"Error generating QR code: {str(e)}")
@@ -1406,6 +1444,49 @@ def get_pending_requests():
             "message": f"Error getting pending requests: {str(e)}"
         })
 
+@app.route("/security/get_departments")
+@login_required
+@role_required(["security"])
+def get_all_departments():
+    try:
+        print("Attempting to connect to database...")  # Debug log
+        conn = get_db_connection()
+        if not conn:
+            print("Database connection failed")  # Debug log
+            return jsonify({"success": False, "message": "Database connection error"})
+
+        cursor = conn.cursor(dictionary=True)
+        print("Executing query...")  # Debug log
+        
+        cursor.execute("""
+            SELECT 
+                department_id,
+                department_name,
+                email,
+                COALESCE(status, 'active') as status,
+                created_at
+            FROM departments 
+            ORDER BY department_name
+        """)
+        
+        departments = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        # Convert None values to appropriate defaults
+        for dept in departments:
+            dept['email'] = dept['email'] or 'N/A'
+            dept['status'] = dept['status'] or 'active'
+        
+        return jsonify({"success": True, "departments": departments})
+    except Exception as e:
+        print(f"Error fetching departments: {str(e)}")
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
+        return jsonify({"success": False, "message": str(e)})
+
 @app.route("/get_departments")
 def get_departments():
     try:
@@ -1433,6 +1514,129 @@ def get_departments():
         if 'conn' in locals():
             conn.close()
         return jsonify({"success": False, "message": str(e)})
+
+@app.route("/department/history")
+@login_required
+@role_required(["department"])
+def get_department_history():
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"success": False, "message": "Database connection error"})
+
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get all visits for the current department, ordered by most recent first
+        cursor.execute("""
+            SELECT 
+                vr.registration_id,
+                v.visitor_id,
+                v.visitor_name,
+                vr.purpose,
+                vr.visit_date,
+                vr.time_in,
+                vr.time_out,
+                vr.status,
+                v.email,
+                v.contact_no,
+                v.address,
+                d.department_name,
+                CASE 
+                    WHEN vr.time_in IS NOT NULL AND vr.time_out IS NULL THEN 'checked in'
+                    WHEN vr.time_out IS NOT NULL THEN 'checked out'
+                    ELSE vr.status
+                END as current_status
+            FROM visitor_registrations vr
+            JOIN visitors v ON vr.visitor_id = v.visitor_id
+            JOIN departments d ON vr.department_id = d.department_id
+            LEFT JOIN system_logs sl ON vr.registration_id = sl.related_registration_id
+            WHERE vr.department_id = %s
+            ORDER BY 
+                CASE 
+                    WHEN vr.time_in IS NOT NULL AND vr.time_out IS NULL THEN 1
+                    WHEN vr.visit_date = CURDATE() THEN 2
+                    ELSE 3
+                END,
+                vr.visit_date DESC,
+                vr.time_in DESC
+        """, (session.get('department_id'),))
+        
+        visits = cursor.fetchall()
+        
+        # Format dates and times
+        for visit in visits:
+            visit['visit_date'] = visit['visit_date'].strftime('%B %d, %Y') if visit['visit_date'] else '-'
+            visit['time_in'] = visit['time_in'].strftime('%I:%M %p') if visit['time_in'] else '-'
+            visit['time_out'] = visit['time_out'].strftime('%I:%M %p') if visit['time_out'] else '-'
+            visit['status'] = visit['status'].title()
+        
+        cursor.close()
+        conn.close()
+
+        return render_template('department-history.html', visits=visits)
+
+    except Exception as e:
+        print(f"Error getting department history: {str(e)}")
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
+        return render_template('department-history.html', error=str(e))
+
+@app.route("/static/sounds/<filename>")
+def serve_sound(filename):
+    return send_from_directory('static/sounds', filename)
+
+@app.route("/department/recent_scans")
+@login_required
+@role_required(["department"])
+def get_recent_scans():
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"success": False, "message": "Database connection error"})
+
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get recent visit verifications for the current department
+        cursor.execute("""
+            SELECT 
+                vr.registration_id,
+                v.visitor_name,
+                CASE 
+                    WHEN vr.time_in IS NOT NULL AND vr.time_out IS NULL THEN 'checked in'
+                    WHEN vr.time_out IS NOT NULL THEN 'checked out'
+                    ELSE 'pending'
+                END as action,
+                COALESCE(vr.time_out, vr.time_in, vr.visit_date) as timestamp
+            FROM visitor_registrations vr
+            JOIN visitors v ON vr.visitor_id = v.visitor_id
+            WHERE vr.department_id = %s
+            AND vr.visit_date = CURDATE()
+            ORDER BY COALESCE(vr.time_out, vr.time_in, vr.created_at) DESC
+            LIMIT 10
+        """, (session.get('department_id'),))
+        
+        scans = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            "success": True,
+            "scans": scans
+        })
+
+    except Exception as e:
+        print(f"Error getting recent scans: {str(e)}")
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
+        return jsonify({
+            "success": False,
+            "message": "Error retrieving recent scans"
+        })
 
 if __name__ == "__main__":
     app.run(debug=True)

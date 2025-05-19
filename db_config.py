@@ -10,7 +10,7 @@ def get_db_connection():
             host='localhost',
             user='root',
             password='',
-            database='vmas' if os.getenv('FLASK_ENV') == 'production' else 'vmas_dev'
+            database='vmas_dev'  # Always use vmas_dev for development
         )
         return connection
     except Error as e:

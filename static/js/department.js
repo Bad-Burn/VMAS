@@ -1,12 +1,87 @@
+// Function to format date
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+// Function to load departments
+function loadDepartments() {
+    console.log('Loading departments...');
+    const tableBody = document.getElementById('departmentTable');
+    tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading departments...</td></tr>';
+
+    fetch('/security/get_departments')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Departments data:', data);
+            if (data.success && data.departments && data.departments.length > 0) {
+                tableBody.innerHTML = '';
+                data.departments.forEach(dept => {
+                    const row = document.createElement('tr');
+                    const statusClass = (dept.status || 'active').toLowerCase();
+                    row.innerHTML = `
+                        <td>${dept.department_id || 'N/A'}</td>
+                        <td>${dept.department_name || 'N/A'}</td>
+                        <td>${dept.email || 'N/A'}</td>
+                        <td><span class="status-badge ${statusClass}">${dept.status || 'active'}</span></td>
+                        <td>${formatDate(dept.created_at)}</td>
+                    `;
+                    row.addEventListener('click', () => {
+                        const allRows = tableBody.getElementsByTagName('tr');
+                        for (let r of allRows) {
+                            r.classList.remove('selected');
+                        }
+                        row.classList.add('selected');
+                    });
+                    tableBody.appendChild(row);
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">' + 
+                    (data.departments && data.departments.length === 0 ? 'No departments found' : 
+                    'Failed to load departments: ' + (data.message || 'Unknown error')) + '</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading departments:', error);
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Error loading departments: ' + error.message + '</td></tr>';
+        });
+}
+
+// Initialize when document is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Load staff information
-    loadStaffInfo();
+    console.log('Document loaded, initializing...');
+    loadDepartments();
     
-    // Load dashboard statistics
-    loadDashboardStats();
+    // Initialize row selection
+    document.getElementById('departmentTable').addEventListener('click', function(e) {
+        const row = e.target.closest('tr');
+        if (row) {
+            this.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
+            row.classList.add('selected');
+        }
+    });
     
-    // Load appointments
-    loadAppointments();
+    // Add search event listener
+    document.getElementById('searchDepartment').addEventListener('input', function() {
+        const searchText = this.value.toLowerCase();
+        const rows = document.getElementById('departmentTable').getElementsByTagName('tr');
+        Array.from(rows).forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchText) ? '' : 'none';
+        });
+    });
+});
     
     // Add event listeners
     document.getElementById('searchBtn').addEventListener('click', searchAppointments);
@@ -88,17 +163,33 @@ function loadAppointments() {
     });
 }
 
-function updateStatus(appointmentId, status) {
-    const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
-    const appointmentIndex = appointments.findIndex(app => app.id === appointmentId);
-    
-    if (appointmentIndex !== -1) {
-        appointments[appointmentIndex].status = status;
-        localStorage.setItem('appointments', JSON.stringify(appointments));
-        
-        // Reload the dashboard
-        loadDashboardStats();
-        loadAppointments();
+// Function to edit department
+function editDepartment() {
+    const selectedRow = document.querySelector('#departmentTable tr.selected');
+    if (selectedRow) {
+        const deptId = selectedRow.cells[0].textContent;
+        const deptName = selectedRow.cells[1].textContent;
+        const email = selectedRow.cells[2].textContent;
+        // TODO: Implement edit functionality
+        alert('Edit functionality coming soon');
+        console.log('Edit department:', { deptId, deptName, email });
+    } else {
+        alert('Please select a department to edit');
+    }
+}
+
+// Function to delete department
+function deleteDepartment() {
+    const selectedRow = document.querySelector('#departmentTable tr.selected');
+    if (selectedRow) {
+        const deptId = selectedRow.cells[0].textContent;
+        if (confirm('Are you sure you want to delete this department?')) {
+            // TODO: Implement delete functionality
+            alert('Delete functionality coming soon');
+            console.log('Delete department:', deptId);
+        }
+    } else {
+        alert('Please select a department to delete');
     }
 }
 

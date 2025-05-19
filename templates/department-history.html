@@ -196,6 +196,22 @@
             color: white;
             font-weight: 500;
             border-bottom: 2px solid #dee2e6;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .history-table th i {
+            margin-left: 5px;
+            font-size: 12px;
+            opacity: 0.5;
+        }
+
+        .history-table th.asc i::before {
+            content: "\f0de";  /* fa-sort-up */
+        }
+
+        .history-table th.desc i::before {
+            content: "\f0dd";  /* fa-sort-down */
         }
 
         .history-table tbody tr:last-child td {
@@ -240,6 +256,16 @@
         .status-rejected {
             background-color: #ffebee;
             color: #c62828;
+        }
+
+        .status-checked-in {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-checked-out {
+            background-color: #e3f2fd;
+            color: #1565c0;
         }
 
         .no-records {
@@ -314,92 +340,178 @@
             border-radius: 8px;
         }
 
+        .timeline-container {
+            position: relative;
+            padding: 20px 0;
+        }
+
         .timeline-event {
             display: flex;
             align-items: flex-start;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             position: relative;
         }
 
-        .timeline-event:not(:last-child):before {
+        .timeline-line {
+            position: relative;
+            margin-right: 20px;
+        }
+
+        .timeline-line.has-line::after {
             content: '';
             position: absolute;
-            left: 10px;
-            top: 24px;
-            bottom: -15px;
+            left: 50%;
+            top: 30px;
+            bottom: -20px;
             width: 2px;
-            background-color: #ddd;
+            background-color: #e0e0e0;
+            transform: translateX(-50%);
         }
 
         .event-icon {
-            width: 24px;
-            height: 24px;
-            background-color: #13334C;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 15px;
-            flex-shrink: 0;
+            color: white;
+            font-size: 14px;
+            z-index: 1;
+        }
+
+        .event-icon.status-registered {
+            background-color: #2196F3;
+        }
+
+        .event-icon.status-active {
+            background-color: #4CAF50;
+        }
+
+        .event-icon.status-completed {
+            background-color: #9E9E9E;
         }
 
         .event-details {
             flex-grow: 1;
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-left: 10px;
         }
 
         .event-time {
-            font-size: 12px;
+            font-size: 14px;
             color: #666;
+            margin-bottom: 4px;
         }
 
         .event-description {
-            margin-top: 3px;
             color: #333;
+            font-weight: 500;
         }
 
-        /* Make table rows clickable */
-        .history-table tbody tr {
-            cursor: pointer;
-            transition: background-color 0.2s;
+        /* Modal enhancements */
+        .visit-section, .visitor-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
 
-        .history-table tbody tr:hover {
-            background-color: #f0f4f8;
-        }
-
-        .pagination {
+        .visit-section h3, .visitor-section h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #13334C;
             display: flex;
-            justify-content: center;
-            gap: 5px;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-actions {
             margin-top: 20px;
+            text-align: right;
         }
 
-        .pagination button {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            background: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .pagination button.active {
-            background: #13334C;
-            color: white;
-            border-color: #13334C;
-        }
-
+        /* Print styles */
         @media print {
             .sidebar,
             .actions-bar,
-            .pagination {
-                display: none;
+            .pagination,
+            .modal-actions,
+            .modal-close {
+                display: none !important;
             }
 
             .main-content {
-                margin: 0;
-                padding: 0;
+                margin: 0 !important;
+                padding: 0 !important;
             }
+
+            .visit-section,
+            .visitor-section,
+            .visit-timeline {
+                break-inside: avoid;
+            }
+
+            .timeline-line.has-line::after {
+                background-color: #ccc !important;
+            }
+
+            .event-icon {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+
+        /* Highlight active visitors */
+        .active-visit {
+            background-color: rgba(46, 125, 50, 0.05);
+            animation: highlight 2s ease-in-out;
+        }
+
+        @keyframes highlight {
+            0% { background-color: rgba(46, 125, 50, 0.2); }
+            100% { background-color: rgba(46, 125, 50, 0.05); }
+        }
+
+        .view-details-btn {
+            background: none;
+            border: none;
+            color: #13334C;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .view-details-btn:hover {
+            background: #f0f4f8;
+            color: #4CAF50;
+        }
+
+        /* Add padding to the Actions column */
+        .history-table th:last-child,
+        .history-table td:last-child {
+            text-align: center;
+            width: 80px;
+        }
+
+        /* Auto-refresh animation */
+        .refresh-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(0.95); opacity: 1; }
         }
     </style>
 </head>
@@ -438,39 +550,70 @@
     </nav><div class="main-content">
         <div class="history-container">
             <div class="page-header">
-                <h1>Visitor List</h1>
-                <div class="search-bar">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchInput" placeholder="Search">
+                <h1>Visit History</h1>
+            </div>
+
+            <div class="actions-bar">
+                <div class="search-filters">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="searchInput" placeholder="Search visits...">
+                    </div>
+                    <div class="date-filter">
+                        <input type="date" id="startDate" placeholder="Start Date">
+                        <input type="date" id="endDate" placeholder="End Date">
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-export" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> Export
+                    </button>
+                    <button class="btn btn-print" onclick="printRecords()">
+                        <i class="fas fa-print"></i> Print
+                    </button>
                 </div>
             </div>
 
-            <div class="action-buttons">
-                <button class="btn btn-print" onclick="printRecords()">
-                    <i class="fas fa-print"></i> Print
-                </button>
-            </div>
-
-            {% if visits %}            <table class="history-table">
+            {% if visits %}
+            <table class="history-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Purpose</th>
-                        <th>Date</th>
-                        <th>Location</th>
-                        <th>Status</th>
+                        <th onclick="sortTable(0)">Visitor <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(1)">Visit ID <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(2)">Purpose <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(3)">Date <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(4)">Time In <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(5)">Time Out <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(6)">Status <i class="fas fa-sort"></i></th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="historyTableBody">
                     {% for visit in visits %}
-                    <tr>
-                        <td>{{ visit.visitor_id }}</td>
-                        <td>{{ visit.name }}</td>
+                    <tr class="visit-row {% if visit.current_status == 'checked in' %}active-visit{% endif %}" data-visit-id="{{ visit.registration_id }}">
+                        <td>
+                            <div class="visitor-info">
+                                <div>
+                                    <div>{{ visit.visitor_name }}</div>
+                                    <small>{{ visit.visitor_id }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ visit.registration_id }}</td>
                         <td>{{ visit.purpose }}</td>
-                        <td>{{ visit.date.strftime('%B %d, %Y') }}</td>
-                        <td>{{ visit.location or session.name }}</td>
-                        <td>{{ visit.status }}</td>
+                        <td>{{ visit.visit_date }}</td>
+                        <td>{{ visit.time_in }}</td>
+                        <td>{{ visit.time_out }}</td>
+                        <td>
+                            <span class="status-badge status-{{ visit.current_status|replace(' ', '-') }}">
+                                {{ visit.current_status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="view-details-btn" onclick="viewVisitDetails('{{ visit.registration_id }}')">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -479,9 +622,7 @@
             <div class="pagination">
                 <button onclick="changePage(1)"><i class="fas fa-angle-double-left"></i></button>
                 <button onclick="changePage(currentPage-1)"><i class="fas fa-angle-left"></i></button>
-                <button class="active">1</button>
-                <button>2</button>
-                <button>3</button>
+                <span id="pageInfo">Page 1</span>
                 <button onclick="changePage(currentPage+1)"><i class="fas fa-angle-right"></i></button>
                 <button onclick="changePage(totalPages)"><i class="fas fa-angle-double-right"></i></button>
             </div>
@@ -500,52 +641,165 @@
         <div class="modal-content">
             <span class="modal-close">&times;</span>
             <h2>Visit Details</h2>
+            
             <div class="visit-details">
-                <div class="detail-group">
-                    <div class="detail-label">Visitor Name</div>
-                    <div class="detail-value" id="modalVisitorName"></div>
+                <div class="visitor-section">
+                    <h3><i class="fas fa-user"></i> Visitor Information</h3>
+                    <div class="detail-group">
+                        <div class="detail-label">Visitor Name</div>
+                        <div class="detail-value" id="modalVisitorName"></div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Visitor ID</div>
+                        <div class="detail-value" id="modalVisitorId"></div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Email</div>
+                        <div class="detail-value" id="modalVisitorEmail"></div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Contact Number</div>
+                        <div class="detail-value" id="modalVisitorPhone"></div>
+                    </div>
                 </div>
-                <div class="detail-group">
-                    <div class="detail-label">Visitor ID</div>
-                    <div class="detail-value" id="modalVisitorId"></div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Visit ID</div>
-                    <div class="detail-value" id="modalVisitId"></div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Purpose</div>
-                    <div class="detail-value" id="modalPurpose"></div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Visit Date</div>
-                    <div class="detail-value" id="modalDate"></div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Time In</div>
-                    <div class="detail-value" id="modalTimeIn"></div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Time Out</div>
-                    <div class="detail-value" id="modalTimeOut"></div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Status</div>
-                    <div class="detail-value" id="modalStatus"></div>
+                
+                <div class="visit-section">
+                    <h3><i class="fas fa-info-circle"></i> Visit Information</h3>
+                    <div class="detail-group">
+                        <div class="detail-label">Visit ID</div>
+                        <div class="detail-value" id="modalVisitId"></div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Purpose</div>
+                        <div class="detail-value" id="modalPurpose"></div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Visit Date</div>
+                        <div class="detail-value" id="modalDate"></div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value">
+                            <span class="status-badge" id="modalStatus"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
+            
             <div class="visit-timeline">
-                <h3>Visit Timeline</h3>
-                <div id="visitTimeline"></div>
+                <h3><i class="fas fa-history"></i> Visit Timeline</h3>
+                <div class="timeline-container" id="visitTimeline">
+                    <!-- Timeline events will be added here -->
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-print" onclick="printVisitDetails()">
+                    <i class="fas fa-print"></i> Print Details
+                </button>
             </div>
         </div>
     </div>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <script>
-        // Modal Elements
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let totalPages = Math.ceil(document.querySelectorAll('.history-table tbody tr').length / itemsPerPage);
+        
+        // Table sorting
+        function sortTable(column) {
+            const table = document.querySelector('.history-table');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Get current sort direction
+            const th = table.querySelectorAll('th')[column];
+            const isAscending = !th.classList.contains('asc');
+            
+            // Remove sort classes from all headers
+            table.querySelectorAll('th').forEach(header => {
+                header.classList.remove('asc', 'desc');
+            });
+            
+            // Add sort class to current header
+            th.classList.add(isAscending ? 'asc' : 'desc');
+            
+            // Sort the rows
+            rows.sort((a, b) => {
+                let aValue = a.cells[column].textContent;
+                let bValue = b.cells[column].textContent;
+                
+                // Special handling for dates and times
+                if (column === 3 || column === 4 || column === 5) {
+                    aValue = new Date(aValue);
+                    bValue = new Date(bValue);
+                }
+                
+                if (aValue < bValue) return isAscending ? -1 : 1;
+                if (aValue > bValue) return isAscending ? 1 : -1;
+                return 0;
+            });
+            
+            // Re-append rows in new order
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+            
+            // Reset pagination
+            currentPage = 1;
+            updatePagination();
+        }
+        
+        // Auto-refresh history table
+        function refreshHistory() {
+            fetch('/department/history')
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTable = doc.getElementById('historyTableBody');
+                    
+                    if (newTable) {
+                        document.getElementById('historyTableBody').innerHTML = newTable.innerHTML;
+                    }
+                })
+                .catch(error => console.error('Error refreshing history:', error));
+        }
+
+        // View visit details
+        function viewVisitDetails(visitId) {
+            const row = document.querySelector(`tr[data-visit-id="${visitId}"]`);
+            if (!row) return;
+
+            const visitor = {
+                name: row.querySelector('.visitor-info div div').textContent,
+                id: row.querySelector('.visitor-info small').textContent,
+                status: row.querySelector('.status-badge').textContent
+            };
+
+            // Update modal with visit details
+            document.getElementById('modalVisitorName').textContent = visitor.name;
+            document.getElementById('modalVisitorId').textContent = visitor.id;
+            
+            // Show modal
+            document.getElementById('visitModal').style.display = 'block';
+        }
+
+        // Close modal
+        document.querySelector('.modal-close').onclick = function() {
+            document.getElementById('visitModal').style.display = 'none';
+        }
+
+        // Initialize auto-refresh
+        setInterval(refreshHistory, 30000); // Refresh every 30 seconds
+
+        // Add refresh indicator to header
+        document.querySelector('.page-header h1').innerHTML += 
+            '<span class="refresh-indicator" title="Auto-refreshing every 30 seconds"></span>';
+        
+        // Modal functionality
         const modal = document.getElementById('visitModal');
         const modalClose = document.querySelector('.modal-close');
 
-        // Close modal when clicking the close button or outside the modal
         modalClose.onclick = () => modal.style.display = 'none';
         window.onclick = (event) => {
             if (event.target === modal) modal.style.display = 'none';
@@ -561,7 +815,7 @@
                 const date = this.cells[3].textContent;
                 const timeIn = this.cells[4].textContent;
                 const timeOut = this.cells[5].textContent;
-                const status = this.cells[6].textContent.trim();
+                const status = this.cells[6].querySelector('.status-badge').textContent.trim();
 
                 // Update modal content
                 document.getElementById('modalVisitorName').textContent = visitorName;
@@ -569,38 +823,47 @@
                 document.getElementById('modalVisitId').textContent = visitId;
                 document.getElementById('modalPurpose').textContent = purpose;
                 document.getElementById('modalDate').textContent = date;
-                document.getElementById('modalTimeIn').textContent = timeIn;
-                document.getElementById('modalTimeOut').textContent = timeOut;
                 document.getElementById('modalStatus').textContent = status;
+                document.getElementById('modalStatus').className = 'status-badge status-' + status.toLowerCase();
 
                 // Create timeline events
                 const timeline = document.getElementById('visitTimeline');
                 timeline.innerHTML = '';
-                const events = [];
-                events.push({
-                    icon: '<i class="fas fa-clipboard-list"></i>',
-                    time: date,
-                    description: 'Visit registered'
-                });
+                
+                const events = [
+                    {
+                        icon: '<i class="fas fa-clipboard-list"></i>',
+                        time: date,
+                        description: 'Visit registered',
+                        status: 'registered'
+                    }
+                ];
+
                 if (timeIn !== '-') {
                     events.push({
                         icon: '<i class="fas fa-sign-in-alt"></i>',
-                        time: `${date} ${timeIn}`,
-                        description: 'Visitor checked in'
+                        time: timeIn,
+                        description: 'Visitor checked in',
+                        status: 'active'
                     });
                 }
+
                 if (timeOut !== '-') {
                     events.push({
                         icon: '<i class="fas fa-sign-out-alt"></i>',
-                        time: `${date} ${timeOut}`,
-                        description: 'Visitor checked out'
+                        time: timeOut,
+                        description: 'Visitor checked out',
+                        status: 'completed'
                     });
                 }
-                events.forEach(event => {
+
+                events.forEach((event, index) => {
                     const eventEl = document.createElement('div');
                     eventEl.className = 'timeline-event';
                     eventEl.innerHTML = `
-                        <div class="event-icon">${event.icon}</div>
+                        <div class="timeline-line ${index < events.length - 1 ? 'has-line' : ''}">
+                            <div class="event-icon status-${event.status}">${event.icon}</div>
+                        </div>
                         <div class="event-details">
                             <div class="event-time">${event.time}</div>
                             <div class="event-description">${event.description}</div>
@@ -608,10 +871,46 @@
                     `;
                     timeline.appendChild(eventEl);
                 });
+
                 modal.style.display = 'block';
             });
         });
 
+        // Print visit details
+        function printVisitDetails() {
+            const modalContent = document.querySelector('.modal-content').cloneNode(true);
+            const printWindow = window.open('', '_blank');
+            
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Visit Details</title>
+                    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+                    <link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                    <style>
+                        body { padding: 20px; }
+                        .modal-close, .modal-actions { display: none; }
+                        .status-badge { display: inline-block; }
+                        @media print {
+                            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${modalContent.innerHTML}
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 250);
+        }
+        
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const searchText = e.target.value.toLowerCase();
@@ -645,18 +944,43 @@
 
         document.getElementById('startDate').addEventListener('change', filterByDate);
         document.getElementById('endDate').addEventListener('change', filterByDate);
-
-        // Export functionality
+        
+        // Pagination
+        function updatePagination() {
+            const visibleRows = document.querySelectorAll('.history-table tbody tr:not([style*="display: none"])');
+            totalPages = Math.ceil(visibleRows.length / itemsPerPage);
+            
+            // Update page info
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+            
+            // Show/hide rows for current page
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            visibleRows.forEach((row, index) => {
+                row.style.display = (index >= start && index < end) ? '' : 'none';
+            });
+        }
+        
+        function changePage(page) {
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            updatePagination();
+        }
+        
+        // Export to Excel
         function exportToExcel() {
             const table = document.querySelector('.history-table');
-            const wb = XLSX.utils.table_to_book(table, { sheet: "Visit History" });
-            XLSX.writeFile(wb, 'department_visit_history.xlsx');
+            const wb = XLSX.utils.table_to_book(table, {sheet: "Visit History"});
+            XLSX.writeFile(wb, `department_visit_history_${new Date().toISOString().split('T')[0]}.xlsx`);
         }
-
+        
         // Print functionality
         function printRecords() {
             window.print();
         }
+        
+        // Initialize pagination
+        updatePagination();
     </script>
 </body>
 </html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Audio Files</title>
+    <script>
+        function generateSuccessSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const duration = 0.15;
+            
+            // Success sound (two ascending tones)
+            const oscillator1 = audioContext.createOscillator();
+            oscillator1.type = 'sine';
+            oscillator1.frequency.setValueAtTime(1200, audioContext.currentTime);
+            oscillator1.frequency.setValueAtTime(1800, audioContext.currentTime + duration/2);
+            
+            const gainNode = audioContext.createGain();
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator1.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator1.start();
+            oscillator1.stop(audioContext.currentTime + duration);
+            
+            // Export as wav file
+            setTimeout(() => {
+                const chunks = [];
+                const dest = audioContext.createMediaStreamDestination();
+                const mediaRecorder = new MediaRecorder(dest.stream);
+                
+                mediaRecorder.ondataavailable = (evt) => chunks.push(evt.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { 'type' : 'audio/wav' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'success.wav';
+                    a.click();
+                };
+                
+                mediaRecorder.start();
+                setTimeout(() => mediaRecorder.stop(), duration * 1000);
+            }, 100);
+        }
+
+        function generateErrorSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const duration = 0.3;
+            
+            // Error sound (two descending tones)
+            const oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(400, audioContext.currentTime + duration/2);
+            
+            const gainNode = audioContext.createGain();
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + duration);
+            
+            // Export as wav file
+            setTimeout(() => {
+                const chunks = [];
+                const dest = audioContext.createMediaStreamDestination();
+                const mediaRecorder = new MediaRecorder(dest.stream);
+                
+                mediaRecorder.ondataavailable = (evt) => chunks.push(evt.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { 'type' : 'audio/wav' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'error.wav';
+                    a.click();
+                };
+                
+                mediaRecorder.start();
+                setTimeout(() => mediaRecorder.stop(), duration * 1000);
+            }, 100);
+        }
+    </script>
+</head>
+<body>
+    <button onclick="generateSuccessSound()">Generate Success Sound</button>
+    <button onclick="generateErrorSound()">Generate Error Sound</button>
+</body>
+</html>
