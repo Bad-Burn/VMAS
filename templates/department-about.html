@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            background-color: #13334C;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 20px 0;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-brand {
+            padding: 0 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .navbar-brand img {
+            width: 40px;
+            height: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item i {
+            width: 24px;
+            margin-right: 10px;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            margin: auto 20px 20px;
+            background: #dc3545;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .main-content {
+            margin-left: 240px;
+            padding: 20px;
+        }
+
+        .about-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        .about-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .about-header img {
+            width: 120px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .about-header h1 {
+            color: #13334C;
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .about-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            color: #13334C;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-content {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            color: #13334C;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .feature-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .contact-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .contact-item i {
+            color: #4CAF50;
+            width: 20px;
+        }
+
+        .version-info {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+            <div>Visitor Management<br>and Analysis System</div>
+        </div>
+
+        <a href="{{ url_for('department') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('department', view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            History
+        </a>
+        <a href="{{ url_for('department', view='scanner') }}" class="menu-item">
+            <i class="fas fa-qrcode"></i>
+            QR Scanner
+        </a>
+        <a href="{{ url_for('department', view='profile') }}" class="menu-item">
+            <i class="fas fa-user"></i>
+            Profile
+        </a>
+        <a href="{{ url_for('department', view='about') }}" class="menu-item active">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+
+        <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>
+
+    <div class="main-content">
+        <div class="about-container">
+            <div class="about-header">
+                <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+                <h1>Visitor Management and Analysis System</h1>
+            </div>
+
+            <div class="about-section">
+                <div class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    About VMAS
+                </div>
+                <div class="section-content">
+                    <p>VMAS is a comprehensive visitor management and analysis system designed for Laguna State Polytechnic University. It streamlines the process of visitor registration, tracking, and management while providing powerful analytics tools for departments.</p>
+                </div>
+            </div>
+
+            <div class="about-section">
+                <div class="section-title">
+                    <i class="fas fa-star"></i>
+                    Key Features
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-qrcode"></i>
+                        </div>
+                        <h3 class="feature-title">QR Code Scanning</h3>
+                        <p class="feature-description">Quick and secure visitor verification using QR code technology</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <h3 class="feature-title">Visit History</h3>
+                        <p class="feature-description">Comprehensive record keeping and visit history tracking</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3 class="feature-title">Analytics</h3>
+                        <p class="feature-description">Detailed visit analytics and reporting capabilities</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="about-section">
+                <div class="section-title">
+                    <i class="fas fa-envelope"></i>
+                    Contact Support
+                </div>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>support@lspu-vmas.edu.ph</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span>(123) 456-7890</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Laguna State Polytechnic University</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="version-info">
+                <p>Version 1.0.0</p>
+                <p>&copy; 2025 Laguna State Polytechnic University. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

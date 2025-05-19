@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/visitor.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="LSPU Logo">
+            <div>Visitor Portal</div>
+        </div>
+        
+        <a href="{{ url_for('visitor') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('visitor', view='form') }}" class="menu-item">
+            <i class="fas fa-file-alt"></i>
+            Visit Form
+        </a>
+        <a href="{{ url_for('visitor', view='qr') }}" class="menu-item active">
+            <i class="fas fa-qrcode"></i>
+            QR Code
+        </a>
+        <a href="{{ url_for('visitor', view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            History
+        </a>
+        <a href="{{ url_for('visitor', view='profile') }}" class="menu-item">
+            <i class="fas fa-user"></i>
+            Profile
+        </a>
+        <a href="{{ url_for('visitor', view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+        <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- QR Code Container -->
+        <div class="qr-container">
+            <div class="qr-header">
+                <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+                <h1>Your QR Code</h1>
+            </div>
+
+            {% if visitor_qr and visitor_qr.qr_code %}
+            <div class="qr-content">
+                <div class="qr-info">
+                    <h2>{{ visitor_qr.visitor_name }}</h2>
+                    <p class="visitor-id">ID: {{ visitor_qr.visitor_id }}</p>
+                    <p class="visit-date">Visit Date: {{ visitor_qr.visit_date.strftime('%B %d, %Y') }}</p>
+                    <p class="status {{ visitor_qr.status.lower() }}">Status: {{ visitor_qr.status }}</p>
+                </div>
+
+                <div class="qr-code">
+                    <img src="data:image/png;base64,{{ visitor_qr.qr_code }}" alt="QR Code">
+                </div>
+
+                <div class="qr-actions">
+                    <button class="btn-primary" onclick="downloadQR()">
+                        <i class="fas fa-download"></i> Download QR Code
+                    </button>
+                    <button class="btn-secondary" onclick="showQRInstructions()">
+                        <i class="fas fa-info-circle"></i> How to Use
+                    </button>
+                </div>
+            </div>
+            {% else %}
+            <div class="no-qr-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <h2>No Active QR Code</h2>
+                <p>You don't have any approved visits at the moment. Please submit a visit request first.</p>
+                <a href="{{ url_for('visitor', view='form') }}" class="btn-primary">
+                    <i class="fas fa-file-alt"></i> Submit Visit Request
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function downloadQR() {
+            const qrImage = document.querySelector('.qr-code img');
+            const link = document.createElement('a');
+            
+            link.href = qrImage.src;
+            link.download = 'visitor-qr-code.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function showQRInstructions() {
+            alert('Present this QR code at the security checkpoint and department entrance.\n\nMake sure to keep it accessible on your device or as a printed copy.');
+        }
+    </script>
+</body>
+</html>

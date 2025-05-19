@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visit History - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/visitor.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            background-color: #13334C;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 20px 0;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-brand {
+            padding: 0 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .navbar-brand img {
+            width: 40px;
+            height: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item i {
+            width: 24px;
+            margin-right: 10px;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .main-content {
+            margin-left: 240px;
+            padding: 20px;
+            min-height: 100vh;
+            background-color: #f5f7fa;
+        }
+
+        .history-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .history-title {
+            color: white;
+            background-color: #13334C;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            padding-left: 35px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .history-table th {
+            background-color: #f8f9fa;
+            color: #13334C;
+            font-weight: 600;
+        }
+
+        .history-table tbody tr:hover {
+            background-color: #f5f7fa;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-approved {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-pending {
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .status-rejected {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .no-records {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .no-records i {
+            font-size: 48px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+            <div>Visitor Management<br>and Analysis System</div>
+        </div>
+
+        <a href="{{ url_for('visitor') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('visitor', view='form') }}" class="menu-item">
+            <i class="fas fa-clipboard-list"></i>
+            Request Form
+        </a>
+        <a href="{{ url_for('visitor', view='qr') }}" class="menu-item">
+            <i class="fas fa-qrcode"></i>
+            QR Code
+        </a>
+        <a href="{{ url_for('visitor', view='history') }}" class="menu-item active">
+            <i class="fas fa-history"></i>
+            Visit History
+        </a>
+        <a href="{{ url_for('visitor', view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+
+        <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>    <div class="main-content">
+        <div class="history-container">
+            <h2 class="history-title">Visit History</h2>
+            
+            <div class="filters">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search visitor history...">
+                </div>
+            </div>
+
+            {% if visits %}
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Purpose</th>
+                        <th>Location</th>
+                        <th>Visit Date</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in visits %}
+                    <tr>
+                        <td>{{ visit.registration_id }}</td>
+                        <td>{{ visit.purpose }}</td>
+                        <td>{{ visit.department_name }}</td>
+                        <td>{{ visit.visit_date.strftime('%B %d, %Y') if visit.visit_date else '-' }}</td>
+                        <td>{{ visit.time_in.strftime('%I:%M %p') if visit.time_in else '-' }}</td>
+                        <td>{{ visit.time_out.strftime('%I:%M %p') if visit.time_out else '-' }}</td>
+                        <td>
+                            <span class="status-badge status-{{ visit.status.lower() }}">
+                                {{ visit.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <button class="print-button" onclick="window.print()">
+                <i class="fas fa-print"></i> Print History
+            </button>
+            {% else %}
+            <div class="no-records">
+                <i class="fas fa-calendar-times"></i>
+                <h2>No Visit Records Found</h2>
+                <p>You haven't made any visits yet. Start by submitting a visit request.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>    <script>
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchText = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.visitor-table tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchText) ? '' : 'none';
+            });
+        });
+
+        // Print functionality
+        window.onbeforeprint = function() {
+            document.querySelector('.sidebar').style.display = 'none';
+            document.querySelector('.main-content').style.marginLeft = '0';
+            document.querySelector('.print-button').style.display = 'none';
+            document.querySelector('.search-container').style.display = 'none';
+        };
+
+        window.onafterprint = function() {
+            document.querySelector('.sidebar').style.display = 'flex';
+            document.querySelector('.main-content').style.marginLeft = '240px';
+            document.querySelector('.print-button').style.display = 'flex';
+            document.querySelector('.search-container').style.display = 'block';
+        };
+    </script>
+</body>
+</html>

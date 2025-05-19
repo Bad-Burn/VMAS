@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Requests - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/security-registration.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Sidebar styles */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            background-color: #13334C;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 20px 0;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-brand {
+            padding: 0 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .navbar-brand img {
+            width: 40px;
+            height: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item i {
+            width: 24px;
+            margin-right: 10px;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .logout-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 100px;
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .main-content {
+            margin-left: 240px;
+            padding: 20px;
+            min-height: 100vh;
+            background-color: #f5f7fa;
+        }
+
+        /* Pending Requests styles */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-block;
+            margin-right: 8px;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .status-pending {
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            margin: 0 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            min-width: 100px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .btn-approve {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background-color: #45a049;
+        }
+
+        .btn-reject {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background-color: #e53935;
+        }
+
+        .btn i {
+            font-size: 14px;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 8px 0;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            overflow: auto;
+            max-width: 100%;
+        }
+
+        .request-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 1000px;
+        }
+
+        .request-table th {
+            background-color: #f5f5f5;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            border-bottom: 2px solid #eee;
+        }
+
+        .request-table td {
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+
+        .request-table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Column widths */
+        .request-table th:nth-child(1), .request-table td:nth-child(1) { width: 10%; } /* ID */
+        .request-table th:nth-child(2), .request-table td:nth-child(2) { width: 15%; } /* Name */
+        .request-table th:nth-child(3), .request-table td:nth-child(3) { width: 20%; } /* Purpose */
+        .request-table th:nth-child(4), .request-table td:nth-child(4) { width: 15%; } /* Department */
+        .request-table th:nth-child(5), .request-table td:nth-child(5) { width: 10%; } /* Date */
+        .request-table th:nth-child(6), .request-table td:nth-child(6) { width: 10%; } /* Status */
+        .request-table th:nth-child(7), .request-table td:nth-child(7) { width: 20%; } /* Actions */
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+            max-width: 400px;
+            min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .notification.success {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .notification.error {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .notification .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            font-size: 16px;
+        }
+
+        .notification .close-btn:hover {
+            opacity: 0.8;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <!-- VMAS Brand -->
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+            <div>Visitor Management<br>and Analysis System</div>
+        </div>
+
+        {% if session.role == 'security' %}
+        <a href="{{ url_for('security') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('security', view='pending') }}" class="menu-item active">
+            <i class="fas fa-clipboard-list"></i>
+            Pending Requests
+        </a>
+        <a href="{{ url_for('security', view='qr') }}" class="menu-item">
+            <i class="fas fa-qrcode"></i>
+            QR Management
+        </a>
+        {% elif session.role == 'department' %}
+        <a href="{{ url_for('department') }}" class="menu-item">
+            <i class="fas fa-building"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('department', view='pending') }}" class="menu-item active">
+            <i class="fas fa-clipboard-list"></i>
+            Pending Requests
+        </a>
+        {% endif %}
+        <a href="{{ url_for('security', view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            Visit Records
+        </a>
+        <a href="{{ url_for('security', view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+        <a href="{{ url_for('security', view='department') }}" class="menu-item">
+            <i class="fas fa-building"></i>
+            Department
+        </a>
+        <a href="{{ url_for('security', view='profile') }}" class="menu-item">
+            <i class="fas fa-user"></i>
+            Profile
+        </a>
+        <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+            <h1>Pending Requests</h1>
+        </header>
+        <!-- Pending Request Section -->
+        <section class="pending-request">
+            <div class="table-header">
+                <h2>Pending Request</h2>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search visitor...">
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="request-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Purpose</th>
+                            <th>Department/Location</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestTableBody">
+                        {% if requests and requests|length > 0 %}
+                            {% for req in requests %}
+                            <tr>
+                                <td>{{ req.visitor_id }}</td>
+                                <td>{{ req.name }}</td>
+                                <td>{{ req.purpose }}</td>
+                                <td>{{ req.location }}</td>
+                                <td>{{ req.date.strftime('%Y-%m-%d') if req.date else 'Not set' }}</td>
+                                <td><span class="status-badge status-{{ req.status.lower() }}">{{ req.status }}</span></td>
+                                <td class="actions-cell">
+                                    <button class="btn btn-approve" onclick="approveRequest('{{ req.id }}')">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                    <button class="btn btn-reject" onclick="rejectRequest('{{ req.id }}')">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="7" style="text-align:center;">No pending requests found</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    <!-- Notification container -->
+    <div id="notification" class="notification" style="display: none;">
+        <span id="notification-message"></span>
+        <button onclick="closeNotification()" class="close-btn"><i class="fas fa-times"></i></button>
+    </div>
+
+    <script>
+        // Notification functions
+        function showNotification(message, isSuccess = true) {
+            const notification = document.getElementById('notification');
+            notification.className = `notification ${isSuccess ? 'success' : 'error'}`;
+            document.getElementById('notification-message').textContent = message;
+            notification.style.display = 'flex';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+
+        function closeNotification() {
+            document.getElementById('notification').style.display = 'none';
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchText = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#requestTableBody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchText) ? '' : 'none';
+            });
+        });
+
+        // Approve request
+        function approveRequest(requestId) {
+            if (!confirm('Are you sure you want to approve this request?')) return;
+            
+            fetch('/security/approve_request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ requestId: requestId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Request approved successfully!');
+                    setTimeout(() => {
+                        window.location.href = '/security/qr';  // Redirect to QR management
+                    }, 1500);
+                } else {
+                    showNotification(data.error || 'Failed to approve request', false);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while approving the request', false);
+            });
+        }
+
+        // Reject request
+        function rejectRequest(requestId) {
+            if (!confirm('Are you sure you want to reject this request?')) return;
+            
+            fetch('/security/reject_request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ requestId: requestId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Request rejected successfully');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showNotification(data.error || 'Failed to reject request', false);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while rejecting the request', false);
+            });
+        }
+    </script>
+</body>
+</html>

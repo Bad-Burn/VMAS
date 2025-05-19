@@ -1,0 +1,57 @@
+/* Import common styles */
+@import url('security.css');
+
+/* About page specific styles */
+.about-section {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: calc(100vh - 100px);
+    padding: 0;
+}
+
+.about-container {
+    background: var(--primary-color);
+    color: white;
+    width: 100%;
+    margin-top: 0;
+}
+
+.about-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.about-container h2 {
+    font-size: 2rem;
+    margin: 0 0 1.5rem 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 10px 10px 0 0;
+}
+
+.about-text {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+/* Responsive design adjustments */
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .about-section {
+        padding: 1rem;
+    }
+
+    .about-container {
+        padding: 1.5rem;
+    }
+
+    .features ul {
+        grid-template-columns: 1fr;
+    }
+}

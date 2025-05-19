@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/security.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Sidebar styles */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            background-color: #13334C;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 20px 0;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-brand {
+            padding: 0 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .navbar-brand img {
+            width: 40px;
+            height: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item i {
+            width: 24px;
+            margin-right: 10px;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            background-color: #dc3545;
+            color: white;
+            padding: 12px 20px;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+
+        .profile-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <!-- VMAS Brand -->
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+            <div>Visitor Management<br>and Analysis System</div>
+        </div>
+
+        {% if session.role == 'security' %}
+        <a href="{{ url_for('security') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('security', view='pending') }}" class="menu-item">
+            <i class="fas fa-clipboard-list"></i>
+            Pending Requests
+        </a>
+        <a href="{{ url_for('security', view='qr') }}" class="menu-item">
+            <i class="fas fa-qrcode"></i>
+            QR Management
+        </a>
+        {% endif %}
+        <a href="{{ url_for(session.role, view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            History
+        </a>
+        <a href="{{ url_for(session.role, view='profile') }}" class="menu-item active">
+            <i class="fas fa-user"></i>
+            Profile
+        </a>
+        <a href="{{ url_for(session.role, view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+        {% if session.role == 'security' %}
+        <a href="{{ url_for('security', view='department') }}" class="menu-item">
+            <i class="fas fa-building"></i>
+            Department
+        </a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+            <h1>My Profile</h1>
+        </header>        <!-- Profile Section -->
+        <section class="profile-section">
+            <div class="profile-container">
+                <div class="profile-header">
+                    <h2>Security Guard Profile</h2>
+                </div>
+                
+                <div class="profile-info">
+                    <div class="info-group">
+                        <label>Email Address</label>
+                        <p id="emailDisplay"></p>
+                    </div>
+
+                    <div class="info-group">
+                        <label>Full Name</label>
+                        <p id="nameDisplay"></p>
+                    </div>
+
+                    <div class="info-group">
+                        <label>Security Guard ID</label>
+                        <p id="securityIdDisplay"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+</body>
+</html>

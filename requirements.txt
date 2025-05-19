@@ -1,0 +1,8 @@
+flask==3.0.0
+werkzeug==3.0.1
+qrcode==8.2.0
+pillow==11.2.1
+flask-session==0.5.0
+mysql-connector-python==8.3.0
+flask-sqlalchemy==3.1.1
+pymysql==1.1.0

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Management - VMAS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/security.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Sidebar styles */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            background-color: #13334C;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 20px 0;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-brand {
+            padding: 0 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .navbar-brand img {
+            width: 40px;
+            height: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item i {
+            width: 24px;
+            margin-right: 10px;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .main-content {
+            margin-left: 240px;
+            padding: 20px;
+            min-height: 100vh;
+            background-color: #f5f7fa;
+        }
+
+        /* Department List */
+        .department-list {
+            margin: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .department-list table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .department-list th {
+            background: #13334c;
+            color: white;
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .department-list td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .department-list tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-edit {
+            background-color: #13334c;
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        /* Search box */
+        .search-container {
+            margin: 20px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 5px;
+            padding: 10px 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            padding: 5px 10px;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .search-box i {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <!-- VMAS Brand -->
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+            <div>Visitor Management<br>and Analysis System</div>
+        </div>
+
+        <a href="{{ url_for('security') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('security', view='pending') }}" class="menu-item">
+            <i class="fas fa-clipboard-list"></i>
+            Pending Requests
+        </a>
+        <a href="{{ url_for('security', view='qr') }}" class="menu-item">
+            <i class="fas fa-qrcode"></i>
+            QR Management
+        </a>
+        <a href="{{ url_for('security', view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            Visit Records
+        </a>
+        <a href="{{ url_for('security', view='about') }}" class="menu-item">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+        <a href="{{ url_for('security', view='department') }}" class="menu-item active">
+            <i class="fas fa-building"></i>
+            Department
+        </a>
+        <a href="{{ url_for('security', view='profile') }}" class="menu-item">
+            <i class="fas fa-user"></i>
+            Profile
+        </a>
+        <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>
+
+    <div class="main-content">
+        <h1 class="page-title">Department Management</h1>
+
+        <!-- Search Box -->
+        <div class="search-container">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchDepartment" placeholder="Search department...">
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-edit" onclick="editDepartment()">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            <button class="btn btn-delete" onclick="deleteDepartment()">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+
+        <!-- Department List -->
+        <div class="department-list">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Department ID</th>
+                        <th>Department Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="departmentTable">
+                    <!-- Department data will be loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/department.js') }}"></script>
+</body>
+</html>

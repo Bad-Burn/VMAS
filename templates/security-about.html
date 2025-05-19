@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - VMAS Security</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/security.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Same sidebar styles as visitor-about.html */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            background-color: #13334C;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 20px 0;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-brand {
+            padding: 0 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .navbar-brand img {
+            width: 40px;
+            height: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item i {
+            width: 24px;
+            margin-right: 10px;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #4CAF50;
+        }
+
+        .logout-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+
+        .main-content {
+            margin-left: 240px;
+            padding: 20px;
+            min-height: 100vh;
+            background-color: #f5f7fa;
+        }
+
+        /* Security-specific styles */
+        .about-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .about-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .about-title {
+            color: white;
+            background-color: #13334C;
+            padding: 15px;
+            border-radius: 5px;
+            margin: -20px -20px 20px;
+            font-size: 20px;
+        }
+
+        .system-overview {
+            grid-column: 1 / -1;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card i {
+            font-size: 24px;
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #13334C;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+
+        .feature-item i {
+            color: #4CAF50;
+            margin-right: 10px;
+            width: 24px;
+        }
+
+        .system-updates {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .update-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .update-item:last-child {
+            border-bottom: none;
+        }
+
+        .update-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .update-title {
+            font-weight: bold;
+            color: #13334C;
+            margin: 5px 0;
+        }
+
+        .update-description {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='images/lspu_logo-removebg-preview.png') }}" alt="VMAS Logo">
+            <div>Visitor Management<br>and Analysis System</div>
+        </div>
+
+        <a href="{{ url_for('security') }}" class="menu-item">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+        <a href="{{ url_for('security', view='pending') }}" class="menu-item">
+            <i class="fas fa-clipboard-list"></i>
+            Pending Requests
+        </a>
+        <a href="{{ url_for('security', view='qr') }}" class="menu-item">
+            <i class="fas fa-qrcode"></i>
+            QR Scanner
+        </a>
+        <a href="{{ url_for('security', view='history') }}" class="menu-item">
+            <i class="fas fa-history"></i>
+            Visit Records
+        </a>
+        <a href="{{ url_for('security', view='about') }}" class="menu-item active">
+            <i class="fas fa-info-circle"></i>
+            About
+        </a>
+        <a href="{{ url_for('security', view='department') }}" class="menu-item">
+            <i class="fas fa-building"></i>
+            Department
+        </a>
+        <a href="{{ url_for('security', view='profile') }}" class="menu-item">
+            <i class="fas fa-user"></i>
+            Profile
+        </a>
+        <a href="{{ url_for('logout') }}" class="menu-item logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </nav>
+
+    <div class="main-content">
+        <div class="about-container">
+            <div class="about-card system-overview">
+                <h2 class="about-title">System Overview</h2>
+                <p>The VMAS Security Module is designed to enhance campus security by providing advanced visitor management tools and real-time monitoring capabilities.</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <div class="stat-number">{{ total_visitors }}</div>
+                        <div class="stat-label">Total Visitors</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-clipboard-check"></i>
+                        <div class="stat-number">{{ pending_requests }}</div>
+                        <div class="stat-label">Pending Requests</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="stat-number">{{ approved_visits }}</div>
+                        <div class="stat-label">Approved Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-clock"></i>
+                        <div class="stat-number">{{ active_visits }}</div>
+                        <div class="stat-label">Active Visits</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="about-card">
+                <h2 class="about-title">Security Features</h2>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Real-time Visitor Monitoring</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="fas fa-qrcode"></i>
+                        <span>QR Code Verification</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="fas fa-history"></i>
+                        <span>Complete Visit Logs</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="fas fa-bell"></i>
+                        <span>Instant Notifications</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Visit Analytics</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="about-card">
+                <h2 class="about-title">Recent Updates</h2>
+                <div class="system-updates">
+                    <div class="update-item">
+                        <div class="update-date">May 16, 2025</div>
+                        <div class="update-title">QR Scanner Enhancement</div>
+                        <div class="update-description">Improved QR code scanning speed and accuracy</div>
+                    </div>
+                    <div class="update-item">
+                        <div class="update-date">May 15, 2025</div>
+                        <div class="update-title">New Analytics Dashboard</div>
+                        <div class="update-description">Added visitor traffic analysis and reporting features</div>
+                    </div>
+                    <div class="update-item">
+                        <div class="update-date">May 14, 2025</div>
+                        <div class="update-title">Security Improvements</div>
+                        <div class="update-description">Enhanced visitor verification process</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
