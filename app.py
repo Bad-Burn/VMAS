@@ -327,95 +327,96 @@ def register():
 @login_required
 @role_required(["security"])
 def security(view=None):
+    # Define template mapping
     templates = {
         "pending": "Pending-Request.html",
         "qr": "QR-Management.html",
         "history": "security-history.html",
-        "about": "security-about.html",
         "profile": "Profile.html",
+        "about": "security-about.html",
         "department": "department.html"
     }
-    
-    if view == "pending":
+
+    # Handle QR Management view
+    if view == 'qr':
         conn = get_db_connection()
         if not conn:
             return "Database connection error", 500
 
         cursor = conn.cursor(dictionary=True)
         try:
-            # Get all pending requests with visitor information
+            # Get approved visitors
+            cursor.execute("""
+                SELECT DISTINCT 
+                    v.visitor_id,
+                    v.visitor_name,
+                    vr.visit_date
+                FROM visitors v
+                JOIN visitor_registrations vr ON v.visitor_id = vr.visitor_id
+                WHERE vr.status = 'approved'
+                AND vr.visit_date >= CURDATE()
+                ORDER BY vr.visit_date ASC
+            """)
+            approved_visitors = cursor.fetchall()
+
+            # Get active QR codes
             cursor.execute("""
                 SELECT 
-                    vr.registration_id as id,
-                    v.visitor_id,
-                    v.visitor_name as name,
-                    vr.purpose,
-                    vr.visit_date as date,
-                    d.department_name as location,
-                    vr.status
-                FROM visitor_registrations vr
-                JOIN visitors v ON vr.visitor_id = v.visitor_id
-                JOIN departments d ON vr.department_id = d.department_id
-                WHERE vr.status = 'pending'
-                ORDER BY vr.created_at DESC
-            """)
-            pending_requests = cursor.fetchall()
-            cursor.close()
-            conn.close()
-            
-            return render_template("Pending-Request.html", requests=pending_requests)
-        except Exception as e:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
-            print(f"Error in pending requests: {str(e)}")
-            return "Error loading pending requests", 500
-            
-    elif view == "qr":
-        conn = get_db_connection()
-        if not conn:
-            return "Database connection error", 500
-
-        cursor = conn.cursor(dictionary=True)
-        try:
-            # Get all active QR codes with visitor information
-            cursor.execute("""
-                SELECT vq.*, v.visitor_name 
+                    vq.*,
+                    v.visitor_name
                 FROM visitor_qr vq
-                JOIN visitors v ON vq.visitor_id = v.visitor_id
+                JOIN visitors v ON v.visitor_id = vq.visitor_id
                 WHERE vq.is_active = TRUE
                 ORDER BY vq.created_at DESC
             """)
             qr_codes = cursor.fetchall()
-            
-            # Get approved visitors without QR codes
-            cursor.execute("""
-                SELECT DISTINCT v.visitor_id, v.visitor_name 
-                FROM visitors v
-                JOIN visitor_registrations vr ON v.visitor_id = vr.visitor_id
-                LEFT JOIN visitor_qr vq ON v.visitor_id = vq.visitor_id
-                WHERE vr.status = 'approved' 
-                AND (vq.id IS NULL OR vq.is_active = FALSE)
-                ORDER BY v.visitor_name
-            """)
-            approved_visitors = cursor.fetchall()
-            
+
             cursor.close()
             conn.close()
-            
-            return render_template("QR-Management.html", 
-                                qr_codes=qr_codes,
-                                approved_visitors=approved_visitors)
-            
+
+            return render_template('QR-Management.html', 
+                                approved_visitors=approved_visitors,
+                                qr_codes=qr_codes)
         except Exception as e:
-            print(f"Error fetching QR codes: {str(e)}")
             if 'cursor' in locals():
                 cursor.close()
             if 'conn' in locals():
                 conn.close()
-            return "Error loading QR codes", 500
-    
+            print(f"Error getting QR data: {str(e)}")
+            return "Error loading QR management", 500
+
+    # Handle profile view
+    if view == "profile":
+        conn = get_db_connection()
+        if not conn:
+            return "Database connection error", 500
+            
+        cursor = conn.cursor(dictionary=True)
+        try:
+            # Get security guard details
+            cursor.execute("""
+                SELECT security_id, username, email
+                FROM security_guards 
+                WHERE security_id = %s
+            """, (session['user_id'],))
+            
+            security_guard = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            if not security_guard:
+                return "Security guard not found", 404
+                
+            return render_template("Profile.html", user=security_guard)
+            
+        except Exception as e:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+            print(f"Error getting security guard profile: {str(e)}")
+            return "Error loading profile", 500
+
     # For other views, use the templates dictionary
     if view in templates:
         return render_template(templates[view])
@@ -616,8 +617,49 @@ def department(view=None):
 @role_required(["visitor"])
 def visitor(view=None):
     if view:
-        # Handle visitor history view
-        if view == 'history':
+        # Handle QR code view
+        if view == 'qr':
+            conn = get_db_connection()
+            if not conn:
+                return "Database connection error", 500
+
+            cursor = conn.cursor(dictionary=True)
+            try:
+                # Get visitor's active QR code and registration info
+                cursor.execute("""
+                    SELECT 
+                        v.visitor_name,
+                        v.visitor_id,
+                        vr.visit_date,
+                        vr.status,
+                        vq.qr_code,
+                        vq.is_active,
+                        vq.valid_until
+                    FROM visitors v
+                    LEFT JOIN visitor_registrations vr ON v.visitor_id = vr.visitor_id
+                    LEFT JOIN visitor_qr vq ON v.visitor_id = vq.visitor_id
+                    WHERE v.visitor_id = %s
+                    AND vr.status = 'approved'
+                    ORDER BY vr.visit_date DESC
+                    LIMIT 1
+                """, (session['user_id'],))
+                visitor_info = cursor.fetchone()
+                
+                cursor.close()
+                conn.close()
+                
+                return render_template('visitor-qr.html', visitor_qr=visitor_info)
+            
+            except Exception as e:
+                print(f"Error in visitor QR route: {str(e)}")
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+                return "Error processing QR code", 500
+
+        # Handle other views
+        elif view == 'history':
             conn = get_db_connection()
             if not conn:
                 return "Database connection error", 500
@@ -652,39 +694,6 @@ def visitor(view=None):
                 if 'conn' in locals():
                     conn.close()
                 return "Error loading visit history", 500
-
-        # Handle QR code view
-        elif view == 'qr':
-            conn = get_db_connection()
-            if not conn:
-                return "Database connection error", 500
-
-            cursor = conn.cursor(dictionary=True)
-            try:
-                # Get visitor's active registration and QR code
-                cursor.execute("""
-                    SELECT v.*, vr.visit_date, vr.status, vr.qr_code_path
-                    FROM visitors v
-                    LEFT JOIN visitor_registrations vr ON v.visitor_id = vr.visitor_id
-                    WHERE v.visitor_id = %s
-                    AND vr.status = 'approved'
-                    ORDER BY vr.visit_date DESC
-                    LIMIT 1
-                """, (session['user_id'],))
-                visitor_info = cursor.fetchone()
-                
-                cursor.close()
-                conn.close()
-                
-                return render_template('visitor-qr.html', visitor_qr=visitor_info)
-            
-            except Exception as e:
-                print(f"Error in visitor QR route: {str(e)}")
-                if 'cursor' in locals():
-                    cursor.close()
-                if 'conn' in locals():
-                    conn.close()
-                return "Error processing QR code", 500
 
         # Handle other views
         else:
@@ -734,8 +743,8 @@ def submit_visit_request():
             # Now insert the visitor registration
             cursor.execute("""
                 INSERT INTO visitor_registrations 
-                (visitor_id, purpose, visit_date, status, department_id)
-                VALUES (%s, %s, %s, %s, %s)
+                (visitor_id, purpose, visit_date, status, department_id, created_at)
+                VALUES (%s, %s, %s, %s, %s, NOW())
             """, (
                 session["user_id"],
                 data["purpose"],
@@ -1260,6 +1269,64 @@ def generate_qr():
         return jsonify({
             "success": False,
             "message": f"Error generating QR code: {str(e)}"
+        })
+
+@app.route("/security/get_pending_requests")
+@login_required
+@role_required(["security"])
+def get_pending_requests():
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                "success": False,
+                "message": "Database connection error"
+            })
+
+        cursor = conn.cursor(dictionary=True)
+
+        # Get all pending requests with visitor and department information
+        cursor.execute("""
+            SELECT 
+                vr.registration_id as id,
+                v.visitor_id,
+                v.visitor_name as name,
+                vr.purpose,
+                d.department_name as location,
+                vr.visit_date as date,
+                UPPER(vr.status) as status,
+                v.address,
+                v.contact_no as contactNo
+            FROM visitor_registrations vr
+            JOIN visitors v ON v.visitor_id = vr.visitor_id
+            LEFT JOIN departments d ON d.department_id = vr.department_id
+            WHERE LOWER(vr.status) = 'pending'
+            ORDER BY vr.created_at DESC
+        """)
+        
+        pending_requests = cursor.fetchall()
+
+        # Convert dates to string format for JSON serialization
+        for request in pending_requests:
+            request['date'] = request['date'].strftime('%Y-%m-%d') if request['date'] else None
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            "success": True,
+            "requests": pending_requests
+        })
+
+    except Exception as e:
+        print(f"Error getting pending requests: {str(e)}")
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
+        return jsonify({
+            "success": False,
+            "message": f"Error getting pending requests: {str(e)}"
         })
 
 if __name__ == "__main__":

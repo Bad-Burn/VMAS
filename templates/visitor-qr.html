@@ -7,6 +7,125 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/visitor.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .qr-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 2rem;
+        }
+
+        .qr-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .qr-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .qr-info {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+
+        .qr-info h2 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .qr-info p {
+            margin: 0.5rem 0;
+            color: #666;
+        }
+
+        .qr-info .visitor-id {
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .qr-info .status {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-top: 0.5rem;
+        }
+
+        .qr-info .status.approved {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .qr-info .status.active {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .qr-info .status.expired {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .qr-code {
+            display: flex;
+            justify-content: center;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: #f8f8f8;
+            border-radius: 8px;
+            width: fit-content;
+        }
+
+        .qr-code img {
+            max-width: 200px;
+            height: auto;
+        }
+
+        .qr-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .no-qr-message {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .no-qr-message i {
+            font-size: 3rem;
+            color: #f44336;
+            margin-bottom: 1rem;
+        }
+
+        .no-qr-message h2 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .no-qr-message p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+    </style>
 </head>
 <body>
     <!-- Sidebar Navigation -->
@@ -61,7 +180,10 @@
                     <h2>{{ visitor_qr.visitor_name }}</h2>
                     <p class="visitor-id">ID: {{ visitor_qr.visitor_id }}</p>
                     <p class="visit-date">Visit Date: {{ visitor_qr.visit_date.strftime('%B %d, %Y') }}</p>
-                    <p class="status {{ visitor_qr.status.lower() }}">Status: {{ visitor_qr.status }}</p>
+                    <p class="valid-until">Valid Until: {{ visitor_qr.valid_until.strftime('%B %d, %Y %I:%M %p') if visitor_qr.valid_until else 'Not Set' }}</p>
+                    <p class="status {{ 'active' if visitor_qr.is_active else 'expired' }}">
+                        Status: {{ 'Active' if visitor_qr.is_active else 'Expired' }}
+                    </p>
                 </div>
 
                 <div class="qr-code">
